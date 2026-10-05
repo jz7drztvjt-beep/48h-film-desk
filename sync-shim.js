@@ -2,15 +2,7 @@
    WebSocket vers server/server.js. Aucune dépendance externe. */
 (function () {
   const URL_WS = window.F48_SERVER || "ws://localhost:8787";
-  let SERVER_TOKEN = localStorage.getItem("f48_server_token") || "";
-
-if (!SERVER_TOKEN) {
-  SERVER_TOKEN = prompt("Code d'accès 48H FILM DESK :") || "";
-
-  if (SERVER_TOKEN) {
-    localStorage.setItem("f48_server_token", SERVER_TOKEN);
-  }
-}
+  const SERVER_TOKEN = localStorage.getItem("f48_server_token") || "";
   const clean = (o) => JSON.parse(JSON.stringify(o ?? null));
   const MY = (() => {
     try {
@@ -28,27 +20,12 @@ if (!SERVER_TOKEN) {
     ready = new Promise((resolve, reject) => {
       const sock = new WebSocket(URL_WS);
       ws = sock;
-      sock.onopen = () => {
+     sock.onopen = () => {
   sock.send(JSON.stringify({
     op: "auth",
     token: SERVER_TOKEN
   }));
-
-  if (wasOpen) {
-    subs.forEach((s, sid) =>
-      sock.send(JSON.stringify({
-        op: "sub",
-        sid,
-        kind: s.kind,
-        path: s.path
-      }))
-    );
-  }
-
-  wasOpen = true;
-  resolve();
 };
-      };
       sock.onerror = () => reject(new Error("serveur injoignable"));
       sock.onclose = () => {
         ready = null;
@@ -56,6 +33,26 @@ if (!SERVER_TOKEN) {
       };
       sock.onmessage = (e) => {
         const m = JSON.parse(e.data);
+if (m.t === "auth") {
+  if (!m.ok) {
+    ready = null;
+    return;
+  }
+
+  wasOpen = true;
+
+  subs.forEach((s, sid) => {
+    sock.send(JSON.stringify({
+      op: "sub",
+      sid,
+      kind: s.kind,
+      path: s.path
+    }));
+  });
+
+  resolve();
+  return;
+}
        if (m.t === "snap") {
   const s = subs.get(m.sid);
   if (s) {
@@ -134,6 +131,18 @@ if (!SERVER_TOKEN) {
   };
 };
   const docSnap = (m) => ({ id: m.id, exists: m.exists, data: () => m.data });
+async function createRemoteProject() {
+  const r = await rpc({ op: "createProject" });
+
+  if (!r || !r.id || !r.code) {
+    throw new Error("Création du projet impossible");
+  }
+
+  return {
+    id: r.id,
+    code: r.code
+  };
+}
 
   const db = {
     collection(p) {
@@ -223,7 +232,10 @@ if (!SERVER_TOKEN) {
   window.claude = {
     async use(name) {
       await connect();
-      if (name === "db") return db;
+      if (name === "db") {
+  db.createRemoteProject = createRemoteProject;
+  return db;
+}
       if (name === "room") return makeRoom();
       if (name === "user") return { me: async () => ({ id: MY, name: null }) };
       throw new Error("Module inconnu : " + name);

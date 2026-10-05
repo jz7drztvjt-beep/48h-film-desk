@@ -8,6 +8,22 @@ const crypto = require("crypto");
 
 const PORT = process.env.PORT || 8787;
 const F48_SECRET = process.env.F48_SECRET || "";
+const PROJECT_CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function makeProjectCode() {
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += PROJECT_CODES[Math.floor(Math.random() * PROJECT_CODES.length)];
+  }
+  return code.slice(0,3) + "-" + code.slice(3);
+}
+
+function hashCode(code) {
+  return crypto
+    .createHash("sha256")
+    .update(String(code).trim().toUpperCase())
+    .digest("hex");
+}
 const FILE = path.join(__dirname, "data.json");
 
 let store = {};
@@ -24,6 +40,26 @@ const colDocs = (col) => Object.keys(store)
   .map((k) => ({ id: k.slice(col.length + 1), data: store[k] }));
 
 const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
+function createProject() {
+  let code;
+  let hash;
+
+  do {
+    code = makeProjectCode();
+    hash = hashCode(code);
+  } while (store["__project_codes/" + hash]);
+
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  store["__project_codes/" + hash] = {
+    id,
+    createdAt: Date.now()
+  };
+
+  persist();
+
+  return { id, code };
+}
 function checkSecret(ws, m) {
   if (!F48_SECRET) return true;
 
@@ -79,6 +115,18 @@ wss.on("connection", (ws) => {
   }
 
   switch (m.op) {
+case "createProject": {
+  const project = createProject();
+
+  send(ws, {
+   t: "got",
+    rid: m.rid,
+    id: project.id,
+    code: project.code
+  });
+
+  break;
+}
       case "set": store[m.path] = m.data; persist(); notify(m.path); break;
       case "add": {
         const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
