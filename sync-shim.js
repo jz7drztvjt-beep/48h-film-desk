@@ -2,6 +2,15 @@
    WebSocket vers server/server.js. Aucune dépendance externe. */
 (function () {
   const URL_WS = window.F48_SERVER || "ws://localhost:8787";
+  let SERVER_TOKEN = localStorage.getItem("f48_server_token") || "";
+
+if (!SERVER_TOKEN) {
+  SERVER_TOKEN = prompt("Code d'accès 48H FILM DESK :") || "";
+
+  if (SERVER_TOKEN) {
+    localStorage.setItem("f48_server_token", SERVER_TOKEN);
+  }
+}
   const clean = (o) => JSON.parse(JSON.stringify(o ?? null));
   const MY = (() => {
     try {
@@ -20,9 +29,25 @@
       const sock = new WebSocket(URL_WS);
       ws = sock;
       sock.onopen = () => {
-        if (wasOpen) subs.forEach((s, sid) => sock.send(JSON.stringify({ op: "sub", sid, kind: s.kind, path: s.path })));
-        wasOpen = true;
-        resolve();
+  sock.send(JSON.stringify({
+    op: "auth",
+    token: SERVER_TOKEN
+  }));
+
+  if (wasOpen) {
+    subs.forEach((s, sid) =>
+      sock.send(JSON.stringify({
+        op: "sub",
+        sid,
+        kind: s.kind,
+        path: s.path
+      }))
+    );
+  }
+
+  wasOpen = true;
+  resolve();
+};
       };
       sock.onerror = () => reject(new Error("serveur injoignable"));
       sock.onclose = () => {

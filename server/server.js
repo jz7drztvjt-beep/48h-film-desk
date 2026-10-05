@@ -4,8 +4,10 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { WebSocketServer } = require("ws");
+const crypto = require("crypto");
 
 const PORT = process.env.PORT || 8787;
+const F48_SECRET = process.env.F48_SECRET || "";
 const FILE = path.join(__dirname, "data.json");
 
 let store = {};
@@ -22,6 +24,20 @@ const colDocs = (col) => Object.keys(store)
   .map((k) => ({ id: k.slice(col.length + 1), data: store[k] }));
 
 const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
+function checkSecret(ws, m) {
+  if (!F48_SECRET) return true;
+
+  if (!m || !m.token) return false;
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(String(m.token)),
+      Buffer.from(String(F48_SECRET))
+    );
+  } catch (e) {
+    return false;
+  }
+}
 
 function snapFor(s) {
   if (s.kind === "doc") return { t: "snap", sid: s.sid, exists: s.path in store, data: store[s.path] ?? null };
@@ -38,10 +54,31 @@ function notify(key) {
 }
 
 wss.on("connection", (ws) => {
-  const mine = new Set();
-  ws.on("message", (raw) => {
-    let m; try { m = JSON.parse(raw); } catch (e) { return; }
-    switch (m.op) {
+  let authenticated = !F48_SECRET;
+  const mine = new Set();  ws.on("message", (raw) => {
+  let m; try { m = JSON.parse(raw); } catch (e) { return; }
+
+  if (m.op === "auth") {
+    authenticated = checkSecret(ws, m);
+
+    send(ws, {
+      t: "auth",
+      ok: authenticated
+    });
+
+    return;
+  }
+
+  if (!authenticated) {
+    send(ws, {
+      t: "auth",
+      ok: false,
+      error: "Accès refusé"
+    });
+    return;
+  }
+
+  switch (m.op) {
       case "set": store[m.path] = m.data; persist(); notify(m.path); break;
       case "add": {
         const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
