@@ -1,10 +1,17 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-let splash;
-let win;
+let splash = null;
+let win = null;
 
 function createWindow() {
+  // Empêche la création de plusieurs fenêtres
+  if (win && !win.isDestroyed()) {
+    win.focus();
+    return;
+  }
+
+  // Fenêtre de chargement
   splash = new BrowserWindow({
     width: 700,
     height: 500,
@@ -13,6 +20,7 @@ function createWindow() {
     center: true,
     alwaysOnTop: true,
     backgroundColor: '#090909',
+    show: true,
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: false
@@ -21,12 +29,18 @@ function createWindow() {
 
   splash.loadFile(path.join(__dirname, 'splash.html'));
 
+  // Après 3 secondes, ouvrir l'application
   setTimeout(() => {
+    if (win && !win.isDestroyed()) {
+      return;
+    }
+
     win = new BrowserWindow({
       width: 1600,
       height: 1000,
       minWidth: 1100,
       minHeight: 700,
+      show: false,
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: false
@@ -35,12 +49,17 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, '48H_FILM_DESK.html'));
 
-    win.once('ready-to-show', () => {
+    // On utilise did-finish-load plutôt que ready-to-show
+    win.webContents.once('did-finish-load', () => {
       if (splash && !splash.isDestroyed()) {
         splash.close();
+        splash = null;
       }
 
-      win.show();
+      if (win && !win.isDestroyed()) {
+        win.show();
+        win.focus();
+      }
     });
   }, 3000);
 }
