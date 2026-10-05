@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid var(--l)
 td input,td select{width:100%}
 .big-t{font-size:30px;font-weight:700}
 @media(max-width:700px){nav{width:54px}nav a{font-size:9px;padding:9px 4px}#cd{font-size:26px}}
-#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:flex-start;justify-content:center;padding-top:12vh;z-index:9}#md>div{background:var(--p);border:1px solid var(--t);width:min(560px,92vw);padding:12px}#md input{width:100%;font-size:16px}.rs{padding:7px 4px;border-bottom:1px solid var(--l);cursor:pointer}.rs:hover{background:var(--p2)}img{border:1px solid var(--l)}
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:flex-start;justify-content:center;padding-top:12vh;z-index:99999}#md>div{background:var(--p);border:1px solid var(--t);width:min(560px,92vw);padding:12px}#md input{width:100%;font-size:16px}.rs{padding:7px 4px;border-bottom:1px solid var(--l);cursor:pointer}.rs:hover{background:var(--p2)}img{border:1px solid var(--l)}
 @media print{header,nav,.np,button{display:none!important}:root{--bg:#fff;--p:#fff;--p2:#fff;--l:#999;--t:#000;--m:#444}html,body,main,section{display:block;height:auto;overflow:visible}}
 nav{display:flex;flex-direction:column;width:178px}nav .g{padding:7px 10px;font-size:11px;letter-spacing:.18em;color:var(--t);background:var(--bg);border-bottom:1px solid var(--l);cursor:pointer;font-weight:700;margin-top:4px}nav a{padding:5px 10px 5px 24px;border-bottom:0;font-size:12px}nav a.on{border-left:3px solid var(--t);padding-left:21px}nav a.pn{margin:auto 6px 8px;padding:10px;text-align:center;background:var(--r);color:#fff;font-weight:700}nav a.pn.on{outline:2px solid #fff}
 .tabs{position:sticky;top:-16px;z-index:3;background:var(--bg);margin:-16px -16px 14px;padding:0 16px;display:flex;border-bottom:1px solid var(--l);overflow:auto}.tabs a{padding:9px 14px;font-size:12px;letter-spacing:.12em;color:var(--m);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent}.tabs a.on{color:var(--t);border-bottom-color:var(--t)}.col{background:var(--p);border:1px solid var(--l);min-width:170px;flex:1;padding:6px;min-height:200px}.hb{display:none}
@@ -382,15 +382,39 @@ async function qrTick(){if(!S.isAdmin||!$i("qr"))return;const mn=Math.floor(Date
 setInterval(qrTick,1000);
 function drawQR(){const el=$i("qr");if(!el)return;el.innerHTML="";const u=QURL+"#p="+ALL.cur+"&k="+QCODE;if(window.QRCode)new QRCode(el,{text:u,width:180,height:180});else el.textContent="QR indisponible"}
 /* accueil */
-function showHome(){HOME=true;const h=$i("home");h.style.display="flex";const real=Object.values(ALL.list).filter(p=>!p.placeholder),old=(()=>{try{return localStorage.getItem("f48_pre_reset")}catch(e){return 0}})();
+function showHome(){
+  HOME=true;
+  COLLAB=false;
+  const h=$i("home");
+
+  h.style.display="flex";
+  h.style.pointerEvents="auto";
+  h.style.zIndex="9999";h.querySelectorAll("input, select, textarea, button").forEach(e=>{
+  e.disabled=false;
+  e.style.pointerEvents="auto";
+  e.style.userSelect="text";
+});const real=Object.values(ALL.list).filter(p=>!p.placeholder),old=(()=>{try{return localStorage.getItem("f48_pre_reset")}catch(e){return 0}})();
 h.innerHTML=`<div class="hbox"><div class="big-t">🎬 48H FILM DESK</div><p class="m">Que veux-tu faire ?</p><div id="hbn" class="alert" style="margin:8px 0"></div>
 <div class="card"><b>CRÉER UN PROJET</b><div class="grid"><input id="h_name" placeholder="Nom du film"><input id="h_me" placeholder="Ton nom" value="${esc(ME.name&&ME.name!="Invité"?ME.name:"")}">${roleSel("h_role",ME.role)}</div><br><button class="big red" onclick="homeCreate()">CRÉER</button></div>
 <p class="m" style="text-align:center">— ou —</p>
 <div class="card"><b>REJOINDRE UN PROJET</b><div class="grid"><select id="h_proj"></select><input id="h_jme" placeholder="Ton nom" value="${esc(ME.name&&ME.name!="Invité"?ME.name:"")}">${roleSel("h_jrole",ME.role)}<input id="h_code" inputmode="numeric" maxlength="7" placeholder="Code à 6 chiffres" value="${esc(QP.get("k")||"")}"></div><br><button class="big" onclick="homeJoin()">REJOINDRE</button><div id="hmsg" class="alert" style="margin-top:8px"></div></div>
 ${real.length?`<div class="card"><b>REPRENDRE</b><div class="row" style="margin-top:8px">${real.map(p=>`<button onclick="homeOpen('${p.id}')">${esc(p.name)}</button>`).join("")}</div></div>`:""}
-<div class="row"><button onclick="wipeAll()">Remise à zéro complète</button>${old?'<button onclick="restoreOld()">Restaurer l\'ancienne sauvegarde</button>':""}</div></div>`;homeSel()}
-function homeSel(){const b=$i("hbn");if(b)b.textContent=typeof claude==="undefined"?"⚠ Hors de Claude : synchronisation et « Rejoindre » indisponibles. Ouvre le lien claude.ai (sur PC comme sur téléphone).":(DB?"":"Connexion à la synchronisation… (connecte-toi à claude.ai)");const s=$i("h_proj");if(!s)return;const v=s.value||QP.get("p")||"";s.innerHTML=`<option value="">Projet (facultatif : le code suffit)</option>`+REMOTE.map(r=>`<option value="${r.id}" ${r.id==v?"selected":""}>${esc(r.name||r.id)}</option>`).join("")}
-const hmsg=t=>{if($i("hmsg"))$i("hmsg").textContent=t};
+<div class="row"><button onclick="wipeAll()">Remise à zéro complète</button>${old?'<button onclick="restoreOld()">Restaurer l\'ancienne sauvegarde</button>':""}</div></div>`;homeSel();setTimeout(()=>{$i("h_name")?.focus();$i("h_name")?.blur()},50)}
+function homeSel(){
+  const b=$i("hbn");
+  if(b)b.textContent="";
+
+  const s=$i("h_proj");
+  if(!s)return;
+
+  const v=s.value||QP.get("p")||"";
+
+  s.innerHTML=
+    `<option value="">Projet (facultatif : le code suffit)</option>`+
+    REMOTE.map(r=>
+      `<option value="${r.id}" ${r.id==v?"selected":""}>${esc(r.name||r.id)}</option>`
+    ).join("");
+}const hmsg=t=>{if($i("hmsg"))$i("hmsg").textContent=t};
 function hideHome(){HOME=false;$i("home").style.display="none";announce()}
 function homeOpen(id){hideHome();switchP(id)}
 async function homeCreate(){
@@ -523,7 +547,20 @@ async function homeJoin(){
     hmsg("Impossible de rejoindre le projet : "+(e.message||e));
   }
 }
-function wipeAll(){if(!confirm("Tout effacer sur cet appareil ? (une sauvegarde de secours est conservée)"))return;try{localStorage.setItem("f48_pre_reset",localStorage.getItem("f48_all")||"");localStorage.setItem("f48_fresh","1")}catch(e){}location.reload()}
+function wipeAll(){
+  const md=document.getElementById("md");
+  md.innerHTML='<div><b>Tout effacer sur cet appareil ?</b><p class="m">Une sauvegarde de secours sera conservée.</p><div class="row"><button onclick="closeM()">ANNULER</button><button class="red" onclick="confirmWipeAll()">EFFACER</button></div></div>';
+  md.style.display="flex";
+}
+
+window.confirmWipeAll=function(){
+  try{
+    localStorage.setItem("f48_pre_reset",localStorage.getItem("f48_all")||"");
+    localStorage.setItem("f48_fresh","1");
+  }catch(e){}
+  location.reload();
+};
+
 function restoreOld(){try{localStorage.setItem("f48_all",localStorage.getItem("f48_pre_reset"));localStorage.removeItem("f48_collab")}catch(e){}location.reload()}
 /* admin : validation des demandes */
 const NAMED=new Set();
@@ -563,8 +600,30 @@ const _tp=togglePause;togglePause=function(){if(isJoiner())return toast("Seul l'
 function newPlaceholder(){const b=def();b.id=uid();Object.assign(b,{name:"NOUVEAU PROJET",scenes:[],shots:[],vfx:[],rushes:[],cons:[],chars:[],locs:[],tasks:[],manual:{0:0,1:0},cur:0,idle:true,placeholder:true,start:Date.now(),deadline:Date.now()+48*36e5});ALL.list[b.id]=b;ALL.cur=b.id}
 function dropConn(){UNS.forEach(f=>f());UNS=[];COLLAB=false;CHAT=[];SEEN=0;try{localStorage.removeItem("f48_collab")}catch(e){}if(ROOM)ROOM.presence({name:null,role:null,mod:null,plan:null}).catch(()=>{});
 const p=ALL.list[ALL.cur];if(p&&p.isAdmin===false){delete ALL.list[ALL.cur];const k=Object.keys(ALL.list)[0];if(k)ALL.cur=k;else newPlaceholder();S=ALL.list[ALL.cur];migrate()}save();badge();applyRole()}
-function leaveProject(){if(!confirm(isJoiner()?"Quitter ce projet ? Tu devras ressaisir un code pour y revenir.":"Retourner à l'écran d'accueil ?"))return;dropConn();toggleChat(false);showHome()}
-const _hc=homeCreate;homeCreate=function(){dropConn();_hc()};
+function leaveProject(){
+  const md=document.getElementById("md");
+  md.innerHTML=`
+    <div>
+      <b>Quitter le projet ?</b>
+      <p class="m">Tu devras ressaisir un code pour y revenir.</p>
+      <div class="row">
+        <button onclick="closeM()">ANNULER</button>
+        <button class="red" onclick="confirmLeaveProject()">QUITTER</button>
+      </div>
+    </div>
+  `;
+  md.style.display="flex";
+}
+
+window.confirmLeaveProject=function(){
+  closeM();
+  dropConn();
+  toggleChat(false);
+  showHome();
+};
+
+const _hc=homeCreate;
+homeCreate=function(){dropConn();_hc()};
 const _hj=homeJoin;homeJoin=function(){dropConn();return _hj()};
 const _ho=homeOpen;homeOpen=function(id){_ho(id);if(DB&&!COLLAB){if(ALL.list[id].isAdmin===false){COLLAB=true;try{localStorage.setItem("f48_collab","1")}catch(e){}subscribeProject(false)}else startCollab()}};
 /* vues téléphone */
