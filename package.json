@@ -9,6 +9,7 @@
     "build": "electron-builder"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -18,9 +19,20 @@
   "build": {
     "appId": "com.flow.48hfilmdesk",
     "productName": "48H FILM DESK",
-    "files": ["main.js", "48H_FILM_DESK.html", "server-config.js", "sync-shim.js"],
-    "win": { "target": "nsis" },
-    "mac": { "target": "dmg" },
-    "linux": { "target": "AppImage" }
+    "files": [
+      "main.js",
+      "48H_FILM_DESK.html",
+      "server-config.js",
+      "sync-shim.js"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }

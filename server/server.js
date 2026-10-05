@@ -1,4 +1,4 @@
-// Serveur de synchronisation 48H FILM DESK
+﻿// Serveur de synchronisation 48H FILM DESK
 // Lancement : npm install && npm run server
 
 const http = require("http");
@@ -6,6 +6,20 @@ const fs = require("fs");
 const path = require("path");
 const { WebSocketServer } = require("ws");
 const crypto = require("crypto");
+const { createClient } = require("@supabase/supabase-js");
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("Variables Supabase manquantes.");
+  process.exit(1);
+}
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY
+);
 
 const PORT = process.env.PORT || 8787;
 const PROJECT_CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -39,17 +53,70 @@ try {
   store = {};
 }
 
+async function loadSupabaseStore() {
+  const { data, error } = await supabase
+    .from("f48_data")
+    .select("path,data");
+
+  if (error) {
+    throw error;
+  }
+
+  for (const row of data || []) {
+    store[row.path] = row.data;
+  }
+
+  console.log(
+    "DonnÃ©es Supabase chargÃ©es : " +
+    (data || []).length
+  );
+}
+
 let saveT = null;
 
 const persist = () => {
   clearTimeout(saveT);
 
-  saveT = setTimeout(() => {
+  saveT = setTimeout(async () => {
     fs.writeFile(
       FILE,
       JSON.stringify(store),
       () => {}
     );
+
+    try {
+      const rows = Object.entries(store).map(
+        ([path, data]) => ({
+          path,
+          data,
+          updated_at: new Date().toISOString()
+        })
+      );
+
+      if (rows.length > 0) {
+        const { error } = await supabase
+          .from("f48_data")
+          .upsert(rows, {
+            onConflict: "path"
+          });
+
+        if (error) {
+          console.error(
+            "Erreur sauvegarde Supabase :",
+            error
+          );
+        } else {
+          console.log(
+            "Données sauvegardées dans Supabase."
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Erreur Supabase :",
+        error
+      );
+    }
   }, 300);
 };
 
@@ -125,19 +192,19 @@ function findProjectByCode(code) {
 }
 
 /*
- * Il n'y a plus de secret global côté utilisateur.
+ * Il n'y a plus de secret global cÃ´tÃ© utilisateur.
  *
- * La sécurité repose maintenant sur le projet :
- * - création => accès automatique au projet créé
- * - code projet => accès au projet correspondant
+ * La sÃ©curitÃ© repose maintenant sur le projet :
+ * - crÃ©ation => accÃ¨s automatique au projet crÃ©Ã©
+ * - code projet => accÃ¨s au projet correspondant
  */
 function checkSecret(ws, m) {
   return true;
 }
 
 /*
- * Vérifie qu'une connexion a bien rejoint/créé un projet
- * et que le chemin demandé appartient à ce projet.
+ * VÃ©rifie qu'une connexion a bien rejoint/crÃ©Ã© un projet
+ * et que le chemin demandÃ© appartient Ã  ce projet.
  */
 function canAccessProject(ws, requestedPath) {
   if (!ws.projectId) {
@@ -201,7 +268,7 @@ wss.on("connection", (ws) => {
 
     /*
      * Connexion initiale.
-     * Aucun secret global n'est demandé.
+     * Aucun secret global n'est demandÃ©.
      */
     if (m.op === "auth") {
       authenticated = checkSecret(ws, m);
@@ -218,7 +285,7 @@ wss.on("connection", (ws) => {
       send(ws, {
         t: "auth",
         ok: false,
-        error: "Accès refusé"
+        error: "AccÃ¨s refusÃ©"
       });
 
       return;
@@ -227,12 +294,12 @@ wss.on("connection", (ws) => {
     switch (m.op) {
 
       /*
-       * Création d'un projet
+       * CrÃ©ation d'un projet
        */
       case "createProject": {
         const project = createProject();
 
-        // Le créateur devient automatiquement membre de ce projet
+        // Le crÃ©ateur devient automatiquement membre de ce projet
         ws.projectId = project.id;
 
         send(ws, {
@@ -263,7 +330,7 @@ wss.on("connection", (ws) => {
           break;
         }
 
-        // Cette connexion est maintenant liée à ce projet
+        // Cette connexion est maintenant liÃ©e Ã  ce projet
         ws.projectId = project.id;
 
         send(ws, {
@@ -285,7 +352,7 @@ wss.on("connection", (ws) => {
             t: "got",
             rid: m.rid,
             ok: false,
-            error: "Accès au projet refusé"
+            error: "AccÃ¨s au projet refusÃ©"
           });
 
           break;
@@ -314,7 +381,7 @@ wss.on("connection", (ws) => {
             t: "got",
             rid: m.rid,
             ok: false,
-            error: "Accès au projet refusé"
+            error: "AccÃ¨s au projet refusÃ©"
           });
 
           break;
@@ -350,7 +417,7 @@ wss.on("connection", (ws) => {
             t: "got",
             rid: m.rid,
             ok: false,
-            error: "Accès au projet refusé"
+            error: "AccÃ¨s au projet refusÃ©"
           });
 
           break;
@@ -371,7 +438,7 @@ wss.on("connection", (ws) => {
       }
 
       /*
-       * Lire des données
+       * Lire des donnÃ©es
        */
       case "get": {
         if (!canAccessProject(ws, m.path)) {
@@ -379,7 +446,7 @@ wss.on("connection", (ws) => {
             t: "got",
             rid: m.rid,
             ok: false,
-            error: "Accès au projet refusé"
+            error: "AccÃ¨s au projet refusÃ©"
           });
 
           break;
@@ -398,7 +465,7 @@ wss.on("connection", (ws) => {
       }
 
       /*
-       * S'abonner à une collection/document
+       * S'abonner Ã  une collection/document
        */
       case "sub": {
         if (!canAccessProject(ws, m.path)) {
@@ -406,7 +473,7 @@ wss.on("connection", (ws) => {
             t: "got",
             rid: m.rid,
             ok: false,
-            error: "Accès au projet refusé"
+            error: "AccÃ¨s au projet refusÃ©"
           });
 
           break;
@@ -428,7 +495,7 @@ wss.on("connection", (ws) => {
       }
 
       /*
-       * Se désabonner
+       * Se dÃ©sabonner
        */
       case "unsub": {
         for (const s of mine) {
@@ -442,10 +509,10 @@ wss.on("connection", (ws) => {
       }
 
       /*
-       * Événements temps réel.
+       * Ã‰vÃ©nements temps rÃ©el.
        *
-       * Ils sont maintenant envoyés uniquement
-       * aux utilisateurs du même projet.
+       * Ils sont maintenant envoyÃ©s uniquement
+       * aux utilisateurs du mÃªme projet.
        */
       case "emit": {
         if (!ws.projectId) {
@@ -476,9 +543,24 @@ wss.on("connection", (ws) => {
   });
 });
 
-http_.listen(PORT, () => {
-  console.log(
-    "Serveur de synchronisation sur le port " +
-      PORT
-  );
-});
+loadSupabaseStore()
+  .then(() => {
+    http_.listen(PORT, () => {
+      console.log(
+        "Serveur de synchronisation sur le port " +
+        PORT
+      );
+
+      console.log(
+        "Stockage Supabase activÃ©."
+      );
+    });
+  })
+  .catch((error) => {
+    console.error(
+      "Impossible de charger Supabase :",
+      error
+    );
+
+    process.exit(1);
+  });
