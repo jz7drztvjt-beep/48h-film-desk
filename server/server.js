@@ -41,16 +41,6 @@ const colDocs = (col) => Object.keys(store)
 
 const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
 function createProject() {
-function findProjectByCode(code) {
-  const hash = hashCode(code);
-  const project = store["__project_codes/" + hash];
-
-  if (!project) {
-    return null;
-  }
-
-  return project;
-}
   let code;
   let hash;
 
@@ -70,6 +60,18 @@ function findProjectByCode(code) {
 
   return { id, code };
 }
+
+function findProjectByCode(code) {
+  const hash = hashCode(code);
+  const project = store["__project_codes/" + hash];
+
+  if (!project) {
+    return null;
+  }
+
+  return project;
+}
+
 function checkSecret(ws, m) {
   if (!F48_SECRET) return true;
 
@@ -84,7 +86,6 @@ function checkSecret(ws, m) {
     return false;
   }
 }
-
 function snapFor(s) {
   if (s.kind === "doc") return { t: "snap", sid: s.sid, exists: s.path in store, data: store[s.path] ?? null };
   return { t: "snap", sid: s.sid, docs: colDocs(s.path) };

@@ -377,8 +377,68 @@ function homeSel(){const b=$i("hbn");if(b)b.textContent=typeof claude==="undefin
 const hmsg=t=>{if($i("hmsg"))$i("hmsg").textContent=t};
 function hideHome(){HOME=false;$i("home").style.display="none";announce()}
 function homeOpen(id){hideHome();switchP(id)}
-function homeCreate(){const n=gv("h_name"),me=gv("h_me");if(!n||!me)return toast("Renseigne le nom du film et ton nom.");Object.assign(ME,{name:me,role:gv("h_role"),set:1});saveMe();let p=ALL.list[ALL.cur];if(!p||!p.placeholder){p=def();p.id=uid();Object.assign(p,{scenes:[],shots:[],cons:[]});ALL.list[p.id]=p}
-Object.assign(p,{name:n,placeholder:false,isAdmin:true,secret:uid()+uid()+uid(),idle:true,start:Date.now(),deadline:Date.now()+48*36e5,paused:false});hideHome();switchP(p.id);if(DB)startCollab()}
+async function homeCreate(){
+  const n=gv("h_name"),me=gv("h_me");
+
+  if(!n||!me)
+    return toast("Renseigne le nom du film et ton nom.");
+
+  if(!DB)
+    return toast("Connexion au serveur indisponible. Réessaie dans quelques secondes.");
+
+  Object.assign(ME,{
+    name:me,
+    role:gv("h_role"),
+    set:1
+  });
+  saveMe();
+
+  try{
+    const remote=await DB.createRemoteProject();
+
+    if(!remote||!remote.id||!remote.code)
+      throw new Error("Le serveur n'a pas créé le projet.");
+
+    let p=ALL.list[remote.id];
+
+    if(!p){
+      p=def();
+      p.id=remote.id;
+      Object.assign(p,{
+        scenes:[],
+        shots:[],
+        cons:[]
+      });
+    }
+
+    Object.assign(p,{
+      name:n,
+      placeholder:false,
+      isAdmin:true,
+      projectCode:remote.code,
+      idle:true,
+      start:Date.now(),
+      deadline:Date.now()+48*36e5,
+      paused:false
+    });
+
+    ALL.list[remote.id]=p;
+
+    try{
+      localStorage.setItem("f48_all",JSON.stringify(ALL));
+    }catch(e){}
+
+    hideHome();
+    switchP(remote.id);
+    startCollab();
+
+    toast("Projet créé — code : "+remote.code);
+
+  }catch(e){
+    console.error(e);
+    toast("Impossible de créer le projet : "+(e.message||e));
+  }
+}
 async function homeJoin(){const pid=gv("h_proj"),code=gv("h_code").replace(/\s/g,""),me=gv("h_jme");if(!code||!me)return hmsg("Saisis ton nom et le code à 6 chiffres.");if(typeof claude==="undefined")return hmsg("Hors de Claude, impossible de rejoindre : ouvre le lien claude.ai (aussi sur PC).");if(!ROOM||!DB)return hmsg("Connexion en cours, ou tu n'es pas connecté à claude.ai. Réessaie dans quelques secondes.");
 Object.assign(ME,{name:me,role:gv("h_jrole"),set:1});saveMe();hmsg("Vérification…");const nonce=uid();
 const r=await new Promise(res=>{let bad;const off=ROOM.on("joinok",m=>{const d=m.data||{};if(d.nonce!=nonce)return;if(d.ok){clearTimeout(bad);off();res(d)}else if(!bad)bad=setTimeout(()=>{off();res({ok:false})},1500)});setTimeout(()=>{off();res(null)},9000);ROOM.emit("joinreq",{pid,code,nonce,name:ME.name,role:ME.role}).catch(()=>{off();res("err")})});
