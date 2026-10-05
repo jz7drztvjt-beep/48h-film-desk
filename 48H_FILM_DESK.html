@@ -317,7 +317,23 @@ function NOW(){return S.idle?S.start:S.paused?S.pAt:Date.now()}
 function togglePause(){const n=Date.now();if(S.idle){const d=S.deadline-S.start;S.start=n;S.deadline=n+d;S.idle=false;S.paused=false}else if(S.paused){const d=n-S.pAt;S.start+=d;S.deadline+=d;S.paused=false}else{S.paused=true;S.pAt=n}save();tick();render()}
 function updChrono(){const b=document.getElementById("chr"),c=document.getElementById("cd");if(b)b.textContent=S.idle?"▶ DÉMARRER":S.paused?"▶ REPRENDRE":"⏸ PAUSE";if(c)c.style.opacity=(S.idle||S.paused)?".5":"1"}
 const hd=document.querySelector("header");hd.children[hd.children.length-1].insertAdjacentHTML("beforeend",`<button id="chr" class="red" onclick="togglePause()"></button>`);
-document.getElementById("ctx").insertAdjacentHTML("afterend",`<span id="peers" class="mono m"></span>`);
+document.getElementById("ctx").insertAdjacentHTML("afterend",`
+  <span id="projectCodeDisplay" class="mono m"></span>
+  <span id="peers" class="mono m"></span>
+`);
+function updateProjectCodeDisplay(){
+  const e=document.getElementById("projectCodeDisplay");
+  if(!e)return;
+
+  const code=S.projectCode;
+
+  if(!code){
+    e.textContent="";
+    return;
+  }
+
+  e.innerHTML=`🔗 CODE : <b>${code}</b> <button onclick="navigator.clipboard.writeText('${code}');toast('Code copié !')">📋</button>`;
+}
 document.body.insertAdjacentHTML("beforeend",`<div id="toast" style="position:fixed;bottom:16px;right:16px;background:var(--p2);border:1px solid var(--t);padding:10px 14px;display:none;z-index:20"></div>`);
 let tt;function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",3500)}
 let DB=null,ROOM=null,USR=null,COLLAB=false,UNS=[],SENT={},PEERS=[],REMOTE=[],ME={name:"Invité"},pushT,rt,QURL="https://claude.ai/artifact/2Vr7HJLjVgnhAsXv68Jbjq";
@@ -433,16 +449,80 @@ async function homeCreate(){
     startCollab();
 
     toast("Projet créé — code : "+remote.code);
+updateProjectCodeDisplay();
 
   }catch(e){
     console.error(e);
     toast("Impossible de créer le projet : "+(e.message||e));
   }
 }
-async function homeJoin(){const pid=gv("h_proj"),code=gv("h_code").replace(/\s/g,""),me=gv("h_jme");if(!code||!me)return hmsg("Saisis ton nom et le code à 6 chiffres.");if(typeof claude==="undefined")return hmsg("Hors de Claude, impossible de rejoindre : ouvre le lien claude.ai (aussi sur PC).");if(!ROOM||!DB)return hmsg("Connexion en cours, ou tu n'es pas connecté à claude.ai. Réessaie dans quelques secondes.");
-Object.assign(ME,{name:me,role:gv("h_jrole"),set:1});saveMe();hmsg("Vérification…");const nonce=uid();
-const r=await new Promise(res=>{let bad;const off=ROOM.on("joinok",m=>{const d=m.data||{};if(d.nonce!=nonce)return;if(d.ok){clearTimeout(bad);off();res(d)}else if(!bad)bad=setTimeout(()=>{off();res({ok:false})},1500)});setTimeout(()=>{off();res(null)},9000);ROOM.emit("joinreq",{pid,code,nonce,name:ME.name,role:ME.role}).catch(()=>{off();res("err")})});
-if(r&&r.ok){hideHome();await joinRemote(r.pid,r.name)}else hmsg(r===null?"Aucune réponse : l'administrateur doit avoir le projet ouvert et être connecté.":r==="err"?"Droits insuffisants : demande le rôle Contributeur.":"Code invalide ou expiré.")}
+async function homeJoin(){
+  const code = gv("h_code").replace(/\s/g,"").toUpperCase();
+  const me = gv("h_jme");
+
+  if(!code || !me)
+    return hmsg("Saisis ton nom et le code du projet.");
+
+  if(!DB)
+    return hmsg("Connexion au serveur indisponible. Réessaie dans quelques secondes.");
+
+  Object.assign(ME,{
+    name:me,
+    role:gv("h_jrole"),
+    set:1
+  });
+
+  saveMe();
+  hmsg("Vérification du code…");
+
+  try{
+    const r = await DB.joinRemoteProject(code);
+
+    if(!r || !r.ok || !r.id){
+      return hmsg("Code de projet invalide.");
+    }
+
+    const pid = r.id;
+
+    let p = ALL.list[pid];
+
+    if(!p){
+      p = def();
+      p.id = pid;
+
+      Object.assign(p,{
+        scenes:[],
+        shots:[],
+        cons:[]
+      });
+
+      ALL.list[pid] = p;
+
+      try{
+        localStorage.setItem("f48_all",JSON.stringify(ALL));
+      }catch(e){}
+    }
+
+    p.placeholder = false;
+    p.isAdmin = false;
+    p.projectCode = code;
+
+    ALL.list[pid] = p;
+
+    try{
+      localStorage.setItem("f48_all",JSON.stringify(ALL));
+    }catch(e){}
+
+    hideHome();
+    await joinRemote(pid,ME.name);
+
+    toast("Projet rejoint avec succès.");
+
+  }catch(e){
+    console.error(e);
+    hmsg("Impossible de rejoindre le projet : "+(e.message||e));
+  }
+}
 function wipeAll(){if(!confirm("Tout effacer sur cet appareil ? (une sauvegarde de secours est conservée)"))return;try{localStorage.setItem("f48_pre_reset",localStorage.getItem("f48_all")||"");localStorage.setItem("f48_fresh","1")}catch(e){}location.reload()}
 function restoreOld(){try{localStorage.setItem("f48_all",localStorage.getItem("f48_pre_reset"));localStorage.removeItem("f48_collab")}catch(e){}location.reload()}
 /* admin : validation des demandes */

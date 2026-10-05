@@ -143,7 +143,24 @@ async function createRemoteProject() {
     code: r.code
   };
 }
+async function joinRemoteProject(code) {
+  const r = await rpc({
+    op: "joinProject",
+    code: String(code || "").trim().toUpperCase()
+  });
 
+  if (!r || !r.ok || !r.id) {
+    return {
+      ok: false,
+      error: r && r.error ? r.error : "Code de projet invalide"
+    };
+  }
+
+  return {
+    ok: true,
+    id: r.id
+  };
+}
   const db = {
     collection(p) {
       return {
@@ -232,8 +249,9 @@ async function createRemoteProject() {
   window.claude = {
     async use(name) {
       await connect();
-      if (name === "db") {
+     if (name === "db") {
   db.createRemoteProject = createRemoteProject;
+  db.joinRemoteProject = joinRemoteProject;
   return db;
 }
       if (name === "room") return makeRoom();
