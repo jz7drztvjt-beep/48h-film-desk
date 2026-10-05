@@ -22,11 +22,13 @@
     "appId": "com.flow.48hfilmdesk",
     "productName": "48H FILM DESK",
     "files": [
-      "main.js",
-      "48H_FILM_DESK.html",
-      "server-config.js",
-      "sync-shim.js"
-    ],
+  "main.js",
+  "splash.html",
+  "48H_FILM_DESK.html",
+  "server-config.js",
+  "sync-shim.js",
+  "assets/**/*"
+],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
