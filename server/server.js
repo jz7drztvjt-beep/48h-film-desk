@@ -41,6 +41,16 @@ const colDocs = (col) => Object.keys(store)
 
 const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
 function createProject() {
+function findProjectByCode(code) {
+  const hash = hashCode(code);
+  const project = store["__project_codes/" + hash];
+
+  if (!project) {
+    return null;
+  }
+
+  return project;
+}
   let code;
   let hash;
 
@@ -115,6 +125,28 @@ wss.on("connection", (ws) => {
   }
 
   switch (m.op) {
+case "joinProject": {
+  const project = findProjectByCode(m.code);
+
+  if (!project) {
+    send(ws, {
+      t: "got",
+      rid: m.rid,
+      ok: false,
+      error: "Code de projet invalide"
+    });
+    break;
+  }
+
+  send(ws, {
+    t: "got",
+    rid: m.rid,
+    ok: true,
+    id: project.id
+  });
+
+  break;
+}
 case "createProject": {
   const project = createProject();
 
