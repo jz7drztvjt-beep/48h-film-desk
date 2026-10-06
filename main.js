@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 
 let splash = null;
 let win = null;
@@ -48,6 +49,10 @@ function createWindow() {
     });
 
     win.loadFile(path.join(__dirname, '48H_FILM_DESK.html'));
+
+    if (app.isPackaged) {
+  autoUpdater.checkForUpdatesAndNotify();
+}
 
     // On utilise did-finish-load plutôt que ready-to-show
     win.webContents.once('did-finish-load', () => {

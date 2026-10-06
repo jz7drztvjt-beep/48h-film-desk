@@ -1,6 +1,6 @@
 {
   "name": "48h-film-desk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "48H FILM DESK - application de bureau",
   "main": "main.js",
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
+    "electron-updater": "^6.8.9",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -21,14 +22,19 @@
   "build": {
     "appId": "com.flow.48hfilmdesk",
     "productName": "48H FILM DESK",
+  "publish": {
+  "provider": "github",
+  "owner": "jz7drztvjt-beep",
+  "repo": "48h-film-desk"
+  },
     "files": [
-  "main.js",
-  "splash.html",
-  "48H_FILM_DESK.html",
-  "server-config.js",
-  "sync-shim.js",
-  "assets/**/*"
-],
+      "main.js",
+      "splash.html",
+      "48H_FILM_DESK.html",
+      "server-config.js",
+      "sync-shim.js",
+      "assets/**/*"
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
