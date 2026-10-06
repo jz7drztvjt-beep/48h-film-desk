@@ -750,303 +750,6 @@ nav a:focus-visible{
   }
 }
 
-
-/* ============================================================
-   48H FILM DESK — DASHBOARD CLEAN
-   ============================================================ */
-
-.F48_CONTROL{
-  max-width:1180px;
-  margin:0 auto 18px;
-}
-
-.F48_CONTROL_TOP{
-  display:grid;
-  grid-template-columns:1.35fr 1fr 1fr;
-  gap:10px;
-  margin-bottom:14px;
-}
-
-.F48_METRIC{
-  background:#0d0e10;
-  border:1px solid #292b2f;
-  border-radius:7px;
-  padding:14px 15px;
-  min-height:72px;
-}
-
-.F48_METRIC_LABEL{
-  color:#6f7279;
-  font-size:9px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:9px;
-}
-
-.F48_METRIC_VALUE{
-  color:#f0efeb;
-  font:800 24px/1 "SF Mono",Consolas,monospace;
-  font-variant-numeric:tabular-nums;
-}
-
-.F48_METRIC_VALUE.good{
-  color:#3fae6a;
-}
-
-.F48_METRIC_VALUE.warn{
-  color:#d6a83d;
-}
-
-.F48_METRIC_VALUE.danger{
-  color:#e5252a;
-}
-
-.F48_METRIC_SUB{
-  color:#60636a;
-  font-size:9px;
-  margin-top:6px;
-}
-
-.F48_BAR{
-  height:4px;
-  background:#202226;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:10px;
-}
-
-.F48_BAR>div{
-  height:100%;
-  background:#f0efeb;
-  border-radius:999px;
-  transition:width .25s ease;
-}
-
-/* PRIORITÉ PRINCIPALE */
-
-.F48_NOW{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:18px 18px;
-  margin-bottom:14px;
-  background:#101113;
-  border:1px solid #303238;
-  border-radius:7px;
-}
-
-.F48_NOW.danger{
-  border-color:rgba(229,37,42,.42);
-  background:linear-gradient(
-    90deg,
-    rgba(229,37,42,.09),
-    rgba(229,37,42,.015)
-  );
-}
-
-.F48_NOW.good{
-  border-color:rgba(63,174,106,.30);
-}
-
-.F48_NOW_MAIN{
-  min-width:0;
-}
-
-.F48_NOW_KICKER{
-  color:#6f7279;
-  font-size:9px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:7px;
-}
-
-.F48_NOW_TITLE{
-  color:#f0efeb;
-  font-size:16px;
-  font-weight:800;
-}
-
-.F48_NOW_DESC{
-  color:#777a81;
-  font-size:10px;
-  margin-top:5px;
-}
-
-.F48_NOW button{
-  flex:none;
-  min-width:90px;
-}
-
-/* PETITS DÉTAILS */
-
-.F48_COLUMNS{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.F48_PANEL{
-  background:#0d0e10;
-  border:1px solid #27292d;
-  border-radius:7px;
-  overflow:hidden;
-}
-
-.F48_PANEL_HEAD{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:9px 11px;
-  background:#101113;
-  border-bottom:1px solid #24262a;
-}
-
-.F48_PANEL_TITLE{
-  color:#9b9da3;
-  font-size:9px;
-  font-weight:800;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-}
-
-.F48_PANEL_COUNT{
-  color:#666970;
-  font:9px "SF Mono",Consolas,monospace;
-}
-
-.F48_LIST{
-  padding:3px;
-}
-
-.F48_ITEM{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:7px 7px;
-  border-radius:4px;
-  cursor:pointer;
-  transition:background .12s ease;
-}
-
-.F48_ITEM:hover{
-  background:#17181b;
-}
-
-.F48_ITEM_ICON{
-  width:19px;
-  flex:none;
-  text-align:center;
-  font-size:11px;
-}
-
-.F48_ITEM_BODY{
-  flex:1;
-  min-width:0;
-}
-
-.F48_ITEM_TITLE{
-  color:#c9cac6;
-  font-size:10px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.F48_ITEM_SUB{
-  color:#5f6269;
-  font-size:8px;
-  margin-top:2px;
-}
-
-.F48_EMPTY{
-  padding:13px 10px;
-  text-align:center;
-  color:#5f6269;
-  font-size:10px;
-}
-
-/* PROJECTION DISCRÈTE */
-
-.F48_PROJECTION{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-}
-
-.F48_PROJ{
-  padding:10px 12px;
-}
-
-.F48_PROJ+.F48_PROJ{
-  border-left:1px solid #24262a;
-}
-
-.F48_PROJ_LABEL{
-  color:#5f6269;
-  font-size:8px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  margin-bottom:5px;
-}
-
-.F48_PROJ_VALUE{
-  color:#c9cac6;
-  font:600 14px/1 "SF Mono",Consolas,monospace;
-}
-
-.F48_PROJ_TEXT{
-  color:#55585f;
-  font-size:8px;
-  margin-top:4px;
-}
-
-.F48_FOOT{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:7px 10px;
-  border-top:1px solid #24262a;
-  color:#55585f;
-  font-size:8px;
-}
-
-/* Évite les titres trop rapprochés */
-
-#v>.F48_CONTROL{
-  margin-top:2px;
-}
-
-@media(max-width:800px){
-  .F48_CONTROL_TOP{
-    grid-template-columns:1fr;
-  }
-
-  .F48_COLUMNS{
-    grid-template-columns:1fr;
-  }
-}
-
-@media(max-width:600px){
-  .F48_NOW{
-    align-items:flex-start;
-    flex-direction:column;
-  }
-
-  .F48_NOW button{
-    width:100%;
-  }
-
-  .F48_PROJECTION{
-    grid-template-columns:1fr;
-  }
-
-  .F48_PROJ+.F48_PROJ{
-    border-left:0;
-    border-top:1px solid #24262a;
-  }
-}
-
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head><body>
 <header><div><b>48H FILM DESK</b><small id="pn" class="mono"></small></div><div style="text-align:right"><small>TEMPS RESTANT</small><div id="cd">--:--:--</div></div></header>
 <main><nav id="nav"></nav><section id="v"></section></main>
@@ -1103,7 +806,7 @@ if(mod=="DASHBOARD"){
   try{
     if(typeof prog==="function"){
       const pp=prog();
-      if(Array.isArray(pp)){
+      if(Array.isArray(pp)&&pp.length){
         const nums=pp.map(Number).filter(Number.isFinite);
         if(nums.length){
           percent=Math.round(
@@ -1180,9 +883,7 @@ if(mod=="DASHBOARD"){
   if(remainingMinutes<180)timeClass="danger";
   else if(remainingMinutes<360)timeClass="warn";
 
-  const late=
-    estimate.need>estimate.left &&
-    estimate.need>0;
+  const late=estimate.need>estimate.left&&estimate.need>0;
 
   let actionTitle="";
   let actionDesc="";
@@ -1194,7 +895,8 @@ if(mod=="DASHBOARD"){
     actionTitle="RATTRAPER LE RETARD";
 
     actionDesc=
-      "La charge restante dépasse le temps disponible.";
+      "La charge estimée dépasse le temps disponible. " +
+      "Réduis maintenant les tâches non essentielles.";
 
     actionModule="PLAN DE TOURNAGE";
     actionClass="danger";
@@ -1205,7 +907,8 @@ if(mod=="DASHBOARD"){
 
     actionDesc=
       todoShots+
-      " plan(s) restent à sécuriser.";
+      " plan(s) ne sont pas encore validés. " +
+      "Le prochain objectif est de les sécuriser.";
 
     actionModule="TOURNAGE";
 
@@ -1214,8 +917,7 @@ if(mod=="DASHBOARD"){
     actionTitle="TRAITER LA PROCHAINE URGENCE";
 
     actionDesc=
-      urgentList.length+
-      " tâche(s) nécessitent ton attention.";
+      "Une ou plusieurs tâches demandent une action immédiate.";
 
     actionModule="TÂCHES";
 
@@ -1225,7 +927,7 @@ if(mod=="DASHBOARD"){
 
     actionDesc=
       problemsList.length+
-      " point(s) peuvent encore bloquer le film.";
+      " point(s) peuvent encore bloquer le projet.";
 
     actionModule="DASHBOARD";
 
@@ -1234,7 +936,8 @@ if(mod=="DASHBOARD"){
     actionTitle="LE FILM EST SOUS CONTRÔLE";
 
     actionDesc=
-      "Aucun blocage critique détecté.";
+      "Aucun blocage critique détecté. " +
+      "Continue le flux normal jusqu'à la livraison.";
 
     actionClass="good";
   }
@@ -1248,7 +951,7 @@ if(mod=="DASHBOARD"){
         <div class="F48_METRIC">
 
           <div class="F48_METRIC_LABEL">
-            Progression
+            État global
           </div>
 
           <div class="F48_METRIC_VALUE">
@@ -1280,15 +983,31 @@ if(mod=="DASHBOARD"){
         <div class="F48_METRIC">
 
           <div class="F48_METRIC_LABEL">
-            Plans à sécuriser
+            Plans validés
           </div>
 
           <div class="F48_METRIC_VALUE">
-            ${todoShots}
+            ${doneShots} / ${shots.length}
           </div>
 
           <div class="F48_METRIC_SUB">
-            ${doneShots} / ${shots.length} VALIDÉS
+            ${todoShots} RESTANT(S)
+          </div>
+
+        </div>
+
+        <div class="F48_METRIC">
+
+          <div class="F48_METRIC_LABEL">
+            Scènes
+          </div>
+
+          <div class="F48_METRIC_VALUE">
+            ${doneScenes} / ${scenes.length}
+          </div>
+
+          <div class="F48_METRIC_SUB">
+            SUIVI DU PROJET
           </div>
 
         </div>
@@ -1326,7 +1045,7 @@ if(mod=="DASHBOARD"){
           <div class="F48_PANEL_HEAD">
 
             <span class="F48_PANEL_TITLE">
-              Urgences
+              Priorités
             </span>
 
             <span class="F48_PANEL_COUNT">
@@ -1340,13 +1059,13 @@ if(mod=="DASHBOARD"){
             ${
               urgentList.length
               ?
-              urgentList.slice(0,3).map(x=>`
+              urgentList.slice(0,6).map((x,i)=>`
 
                 <div class="F48_ITEM"
                      onclick="go('TÂCHES')">
 
                   <span class="F48_ITEM_ICON">
-                    🔴
+                    ${i<3?"🔴":"🟠"}
                   </span>
 
                   <span class="F48_ITEM_BODY">
@@ -1368,7 +1087,7 @@ if(mod=="DASHBOARD"){
               :
 
               `<div class="F48_EMPTY">
-                Aucune urgence.
+                Aucune priorité urgente.
               </div>`
             }
 
@@ -1395,12 +1114,12 @@ if(mod=="DASHBOARD"){
             ${
               problemsList.length
               ?
-              problemsList.slice(0,3).map(x=>`
+              problemsList.slice(0,6).map(x=>`
 
                 <div class="F48_ITEM">
 
                   <span class="F48_ITEM_ICON">
-                    ⚠
+                    ⚠️
                   </span>
 
                   <span class="F48_ITEM_BODY">
@@ -1410,7 +1129,7 @@ if(mod=="DASHBOARD"){
                     </div>
 
                     <div class="F48_ITEM_SUB">
-                      À SURVEILLER
+                      POINT À SURVEILLER
                     </div>
 
                   </span>
@@ -1422,7 +1141,7 @@ if(mod=="DASHBOARD"){
               :
 
               `<div class="F48_EMPTY">
-                Aucun risque.
+                Aucun risque détecté.
               </div>`
             }
 
@@ -1437,11 +1156,11 @@ if(mod=="DASHBOARD"){
         <div class="F48_PANEL_HEAD">
 
           <span class="F48_PANEL_TITLE">
-            Projection
+            Projection 48H
           </span>
 
           <span class="F48_PANEL_COUNT">
-            ${late?"⚠ RETARD":"OK"}
+            ${late?"RETARD PROBABLE":"DANS LES TEMPS"}
           </span>
 
         </div>
@@ -1459,7 +1178,7 @@ if(mod=="DASHBOARD"){
             </div>
 
             <div class="F48_PROJ_TEXT">
-              estimation
+              temps de travail estimé
             </div>
 
           </div>
@@ -1467,7 +1186,7 @@ if(mod=="DASHBOARD"){
           <div class="F48_PROJ">
 
             <div class="F48_PROJ_LABEL">
-              Disponible
+              Temps disponible
             </div>
 
             <div class="F48_PROJ_VALUE">
@@ -1475,10 +1194,22 @@ if(mod=="DASHBOARD"){
             </div>
 
             <div class="F48_PROJ_TEXT">
-              avant deadline
+              avant la deadline
             </div>
 
           </div>
+
+        </div>
+
+        <div class="F48_FOOT">
+
+          <span>
+            Calculé à partir des données actuelles du projet.
+          </span>
+
+          <span>
+            ${late?"⚠ RISQUE":"● OK"}
+          </span>
 
         </div>
 
@@ -1838,7 +1569,6 @@ async function homeCreate(){
   ALL.list[p.id]=p;
   hideHome();
   switchP(p.id);
-  setTimeout(()=>F48StartOnboarding(),250);
   return;
 }
 
@@ -1886,7 +1616,6 @@ async function homeCreate(){
 
     hideHome();
     switchP(remote.id);
-    setTimeout(()=>F48StartOnboarding(),250);
     startCollab();
 
     toast("Projet créé — code : "+remote.code);
@@ -2245,391 +1974,5 @@ nav();render();tick();
   window.F48QuickCommands={open,close};
 })();
 </script>
-
-
-<!-- F48_ONBOARDING_V4 -->
-<style>
-#F48_ONBOARDING_V4{
-  position:fixed;
-  inset:0;
-  z-index:999998;
-  display:none;
-  pointer-events:none;
-}
-#F48_ONBOARDING_V4.open{display:block}
-
-#F48_OB_DIM{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.62);
-  pointer-events:auto;
-}
-
-#F48_OB_SPOT{
-  position:fixed;
-  display:none;
-  border:2px solid #fff;
-  border-radius:7px;
-  box-shadow:
-    0 0 0 5px rgba(255,255,255,.10),
-    0 0 28px rgba(255,255,255,.18);
-  pointer-events:none;
-  transition:all .2s ease;
-}
-
-#F48_OB_ARROW{
-  position:fixed;
-  display:none;
-  z-index:4;
-  font-size:25px;
-  color:#fff;
-  filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));
-  transition:all .2s ease;
-}
-
-#F48_OB_PANEL{
-  position:fixed;
-  z-index:5;
-  width:min(500px,calc(100vw - 32px));
-  background:#101113;
-  border:1px solid #393c42;
-  border-radius:10px;
-  box-shadow:0 24px 80px rgba(0,0,0,.72);
-  padding:22px;
-  pointer-events:auto;
-  transition:all .2s ease;
-}
-
-#F48_OB_STEP{
-  color:#777a81;
-  font:700 10px "SF Mono",Consolas,monospace;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:10px;
-}
-
-#F48_OB_PANEL h1{
-  margin:0 0 9px;
-  font-size:21px;
-  line-height:1.25;
-}
-
-#F48_OB_PANEL p{
-  margin:0 0 15px;
-  color:#aeb0b5;
-  line-height:1.55;
-  font-size:13px;
-}
-
-#F48_OB_EXAMPLE{
-  display:none;
-  margin:0 0 18px;
-  padding:12px 13px;
-  background:#0a0b0d;
-  border:1px solid #292c31;
-  border-radius:6px;
-  color:#d8d8d4;
-  font-size:12px;
-  line-height:1.5;
-}
-
-#F48_OB_EXAMPLE b{
-  display:block;
-  color:#777a81;
-  font-size:9px;
-  letter-spacing:.14em;
-  margin-bottom:6px;
-}
-
-#F48_OB_EXAMPLE code{
-  color:#f0efeb;
-  white-space:pre-wrap;
-}
-
-#F48_OB_ACTIONS{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-}
-
-#F48_OB_ACTIONS button{
-  padding:9px 14px;
-}
-
-#F48_OB_NEXT{
-  background:var(--r);
-  border-color:var(--r);
-  color:#fff;
-}
-
-.F48_OB_NAV_TARGET{
-  position:relative !important;
-  z-index:999999 !important;
-}
-
-@media(max-width:700px){
-  #F48_OB_PANEL{
-    bottom:16px;
-    left:16px;
-    right:16px;
-    width:auto;
-  }
-}
-</style>
-
-<div id="F48_ONBOARDING_V4">
-  <div id="F48_OB_DIM"></div>
-  <div id="F48_OB_SPOT"></div>
-  <div id="F48_OB_ARROW">?</div>
-
-  <div id="F48_OB_PANEL">
-    <div id="F48_OB_STEP"></div>
-    <h1 id="F48_OB_TITLE"></h1>
-    <p id="F48_OB_TEXT"></p>
-
-    <div id="F48_OB_EXAMPLE">
-      <b>EXEMPLE</b>
-      <code id="F48_OB_EXAMPLE_TEXT"></code>
-    </div>
-
-    <div id="F48_OB_ACTIONS">
-      <button onclick="F48ObClose()">Passer le tuto</button>
-      <button id="F48_OB_NEXT" onclick="F48ObNext()">Suivant</button>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-
-  const steps=[
-    {
-      group:"?CRITURE",
-      target:"BIBLE",
-      title:"Commence par les bases",
-      text:"Avant de tourner, pose les fondations de ton film. La Bible rassemble les informations importantes du projet.",
-      example:"Concept : un thriller de 8 minutes.\nTon : sombre et r?aliste.\nLieu principal : une maison isol?e."
-    },
-    {
-      group:"?CRITURE",
-      target:"SC?NARIO",
-      title:"?cris ton histoire",
-      text:"Une fois l'id?e claire, construis ton histoire sc?ne par sc?ne dans le sc?nario.",
-      example:"SC?NE 01 ? INT. MAISON ? NUIT\nL?A entre dans le salon.\nLa lumi?re clignote.\nSon t?l?phone sonne."
-    },
-    {
-      group:"PR?PRODUCTION",
-      target:"D?COUPAGE",
-      title:"Transforme l'histoire en plans",
-      text:"Le d?coupage te permet de d?cider comment chaque sc?ne sera r?ellement film?e.",
-      example:"SC?NE 01\nPlan 01 ? Plan large ? L?a entre\nPlan 02 ? Gros plan ? t?l?phone\nPlan 03 ? Gros plan ? regard de L?a"
-    },
-    {
-      group:"PR?PRODUCTION",
-      target:"PLAN DE TOURNAGE",
-      title:"Organise ta journ?e",
-      text:"Le plan de tournage rassemble les sc?nes et t'aide ? savoir quoi tourner, quand et dans quel ordre.",
-      example:"09:00 ? Sc?ne 01\n10:30 ? Sc?ne 03\n14:00 ? Sc?ne 05\n17:00 ? Plans de coupe"
-    },
-    {
-      group:"PLATEAU",
-      target:"TOURNAGE",
-      title:"Passe au plateau",
-      text:"C'est ici que ton sc?nario devient r?ellement un film. Utilise cette partie pour suivre ce qui est tourn?.",
-      example:"PLAN 12\nSc?ne 03 ? Gros plan ? L?a\n? Tourn?\n? ? garder"
-    },
-    {
-      group:"PLATEAU",
-      target:"RUSHS",
-      title:"Ne perds aucun bon plan",
-      text:"Les rushes servent ? retrouver et contr?ler ce que tu as r?ellement enregistr?.",
-      example:"Rush 0012 ? Sc?ne 03 ? OK\nRush 0013 ? Sc?ne 03 ? ? refaire\nRush 0014 ? Sc?ne 04 ? OK"
-    },
-    {
-      group:"POST-PRODUCTION",
-      target:"MONTAGE",
-      title:"Construis le film final",
-      text:"Apr?s le tournage, le montage rassemble les bons plans pour cr?er ton film.",
-      example:"Sc?ne 01 ? Sc?ne 02 ? Sc?ne 03\nPlans s?lectionn?s\nDur?e actuelle : 06:42"
-    },
-    {
-      group:"POST-PRODUCTION",
-      target:"EXPORT",
-      title:"Et tu termines ici",
-      text:"Quand ton film est termin?, l'export cr?e la version finale que tu peux regarder ou envoyer.",
-      example:"MASTER\n1080p ? H.264\nAudio inclus\n? Pr?t ? exporter"
-    },
-    {
-      group:null,
-      target:null,
-      title:"Tu n'as pas besoin de tout utiliser",
-      text:"Voil? l'essentiel. Avance simplement dans l'ordre qui correspond ? ton travail. Le reste est l? quand tu en as besoin.",
-      example:null
-    }
-  ];
-
-  let i=0;
-
-  function findTarget(name){
-    if(!name)return null;
-
-    const els=[...document.querySelectorAll("nav a")];
-
-    return els.find(el=>{
-      const txt=(el.textContent||"").trim().toUpperCase();
-      return txt===name.toUpperCase();
-    })||null;
-  }
-
-  function findGroup(name){
-    if(!name)return null;
-
-    const gs=[...document.querySelectorAll("nav .g")];
-
-    return gs.find(el=>{
-      return (el.textContent||"").trim().toUpperCase()===name.toUpperCase();
-    })||null;
-  }
-
-  function clearTargets(){
-    document.querySelectorAll(".F48_OB_NAV_TARGET").forEach(el=>{
-      el.classList.remove("F48_OB_NAV_TARGET");
-    });
-  }
-
-  function positionSpot(el){
-    const spot=document.getElementById("F48_OB_SPOT");
-    const arrow=document.getElementById("F48_OB_ARROW");
-
-    if(!el){
-      spot.style.display="none";
-      arrow.style.display="none";
-      return;
-    }
-
-    const r=el.getBoundingClientRect();
-
-    spot.style.display="block";
-    spot.style.left=(r.left-4)+"px";
-    spot.style.top=(r.top-4)+"px";
-    spot.style.width=(r.width+8)+"px";
-    spot.style.height=(r.height+8)+"px";
-
-    arrow.style.display="block";
-    arrow.style.left=Math.max(8,r.right+10)+"px";
-    arrow.style.top=(r.top+r.height/2-15)+"px";
-  }
-
-  function positionPanel(el){
-    const panel=document.getElementById("F48_OB_PANEL");
-
-    if(!el){
-      panel.style.left="50%";
-      panel.style.top="50%";
-      panel.style.transform="translate(-50%,-50%)";
-      return;
-    }
-
-    const r=el.getBoundingClientRect();
-    const pw=Math.min(500,window.innerWidth-32);
-
-    let left=r.right+38;
-
-    if(left+pw>window.innerWidth-16)
-      left=r.left;
-
-    let top=r.top;
-
-    if(top+260>window.innerHeight-16)
-      top=Math.max(16,window.innerHeight-276);
-
-    panel.style.left=left+"px";
-    panel.style.top=top+"px";
-    panel.style.transform="none";
-  }
-
-  window.F48StartOnboarding=function(){
-
-    if(localStorage.getItem("f48_onboarding_seen"))return;
-
-    i=0;
-
-    const root=document.getElementById("F48_ONBOARDING_V4");
-
-    if(!root)return;
-
-    root.classList.add("open");
-    F48ObRender();
-  };
-
-  window.F48ObRender=function(){
-
-    const step=steps[i];
-
-    clearTargets();
-
-    const target=findTarget(step.target);
-    const group=findGroup(step.group);
-
-    if(group)group.classList.add("F48_OB_NAV_TARGET");
-    if(target)target.classList.add("F48_OB_NAV_TARGET");
-
-    document.getElementById("F48_OB_STEP").textContent=
-      "PRISE EN MAIN ? "+(i+1)+" / "+steps.length;
-
-    document.getElementById("F48_OB_TITLE").textContent=step.title;
-    document.getElementById("F48_OB_TEXT").textContent=step.text;
-
-    const ex=document.getElementById("F48_OB_EXAMPLE");
-    const exText=document.getElementById("F48_OB_EXAMPLE_TEXT");
-
-    if(step.example){
-      ex.style.display="block";
-      exText.textContent=step.example;
-    }else{
-      ex.style.display="none";
-      exText.textContent="";
-    }
-
-    document.getElementById("F48_OB_NEXT").textContent=
-      i===steps.length-1?"Commencer":"Suivant";
-
-    const focus=target||group;
-
-    requestAnimationFrame(()=>{
-      positionSpot(focus);
-      positionPanel(focus);
-    });
-  };
-
-  window.F48ObNext=function(){
-
-    if(i<steps.length-1){
-      i++;
-      F48ObRender();
-    }else{
-      F48ObClose();
-    }
-  };
-
-  window.F48ObClose=function(){
-
-    localStorage.setItem("f48_onboarding_seen","1");
-
-    clearTargets();
-
-    document.getElementById("F48_ONBOARDING_V4").classList.remove("open");
-    document.getElementById("F48_OB_SPOT").style.display="none";
-    document.getElementById("F48_OB_ARROW").style.display="none";
-  };
-
-  window.addEventListener("resize",()=>{
-    if(document.getElementById("F48_ONBOARDING_V4")?.classList.contains("open"))
-      F48ObRender();
-  });
-
-})();
-</script>
-<!-- /F48_ONBOARDING_V4 -->
 
 </body></html>

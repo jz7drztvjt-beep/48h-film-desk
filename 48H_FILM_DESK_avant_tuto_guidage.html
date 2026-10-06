@@ -2247,363 +2247,119 @@ nav();render();tick();
 </script>
 
 
-<!-- F48_ONBOARDING_V4 -->
+<!-- F48_ONBOARDING_V3 -->
 <style>
-#F48_ONBOARDING_V4{
+#F48_ONBOARDING_V3{
   position:fixed;
   inset:0;
   z-index:999998;
   display:none;
-  pointer-events:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(7px);
 }
-#F48_ONBOARDING_V4.open{display:block}
-
-#F48_OB_DIM{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.62);
-  pointer-events:auto;
-}
-
-#F48_OB_SPOT{
-  position:fixed;
-  display:none;
-  border:2px solid #fff;
-  border-radius:7px;
-  box-shadow:
-    0 0 0 5px rgba(255,255,255,.10),
-    0 0 28px rgba(255,255,255,.18);
-  pointer-events:none;
-  transition:all .2s ease;
-}
-
-#F48_OB_ARROW{
-  position:fixed;
-  display:none;
-  z-index:4;
-  font-size:25px;
-  color:#fff;
-  filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));
-  transition:all .2s ease;
-}
-
-#F48_OB_PANEL{
-  position:fixed;
-  z-index:5;
-  width:min(500px,calc(100vw - 32px));
+#F48_ONBOARDING_V3.open{display:flex}
+#F48_ONBOARDING_V3 .box{
+  width:min(620px,calc(100vw - 36px));
   background:#101113;
-  border:1px solid #393c42;
+  border:1px solid #34373c;
   border-radius:10px;
-  box-shadow:0 24px 80px rgba(0,0,0,.72);
-  padding:22px;
-  pointer-events:auto;
-  transition:all .2s ease;
+  box-shadow:0 25px 80px rgba(0,0,0,.7);
+  padding:28px;
 }
-
-#F48_OB_STEP{
-  color:#777a81;
+#F48_ONBOARDING_V3 .step{
+  color:#73767d;
   font:700 10px "SF Mono",Consolas,monospace;
   letter-spacing:.16em;
   text-transform:uppercase;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
-
-#F48_OB_PANEL h1{
-  margin:0 0 9px;
-  font-size:21px;
-  line-height:1.25;
+#F48_ONBOARDING_V3 h1{
+  margin:0 0 10px;
+  font-size:24px;
+  letter-spacing:.02em;
 }
-
-#F48_OB_PANEL p{
-  margin:0 0 15px;
-  color:#aeb0b5;
-  line-height:1.55;
-  font-size:13px;
+#F48_ONBOARDING_V3 p{
+  color:#a7a9ae;
+  line-height:1.6;
+  margin:0 0 22px;
 }
-
-#F48_OB_EXAMPLE{
-  display:none;
-  margin:0 0 18px;
-  padding:12px 13px;
-  background:#0a0b0d;
-  border:1px solid #292c31;
-  border-radius:6px;
-  color:#d8d8d4;
-  font-size:12px;
-  line-height:1.5;
-}
-
-#F48_OB_EXAMPLE b{
-  display:block;
-  color:#777a81;
-  font-size:9px;
-  letter-spacing:.14em;
-  margin-bottom:6px;
-}
-
-#F48_OB_EXAMPLE code{
-  color:#f0efeb;
-  white-space:pre-wrap;
-}
-
-#F48_OB_ACTIONS{
+#F48_ONBOARDING_V3 .actions{
   display:flex;
   justify-content:space-between;
-  gap:8px;
+  gap:10px;
 }
-
-#F48_OB_ACTIONS button{
-  padding:9px 14px;
+#F48_ONBOARDING_V3 button{
+  padding:10px 15px;
 }
-
-#F48_OB_NEXT{
+#F48_ONBOARDING_V3 .primary{
   background:var(--r);
   border-color:var(--r);
   color:#fff;
 }
-
-.F48_OB_NAV_TARGET{
-  position:relative !important;
-  z-index:999999 !important;
-}
-
-@media(max-width:700px){
-  #F48_OB_PANEL{
-    bottom:16px;
-    left:16px;
-    right:16px;
-    width:auto;
-  }
-}
 </style>
 
-<div id="F48_ONBOARDING_V4">
-  <div id="F48_OB_DIM"></div>
-  <div id="F48_OB_SPOT"></div>
-  <div id="F48_OB_ARROW">?</div>
-
-  <div id="F48_OB_PANEL">
-    <div id="F48_OB_STEP"></div>
+<div id="F48_ONBOARDING_V3">
+  <div class="box">
+    <div class="step" id="F48_OB_STEP"></div>
     <h1 id="F48_OB_TITLE"></h1>
     <p id="F48_OB_TEXT"></p>
 
-    <div id="F48_OB_EXAMPLE">
-      <b>EXEMPLE</b>
-      <code id="F48_OB_EXAMPLE_TEXT"></code>
-    </div>
-
-    <div id="F48_OB_ACTIONS">
-      <button onclick="F48ObClose()">Passer le tuto</button>
-      <button id="F48_OB_NEXT" onclick="F48ObNext()">Suivant</button>
+    <div class="actions">
+      <button onclick="F48ObClose()">Passer</button>
+      <button class="primary" onclick="F48ObNext()" id="F48_OB_NEXT">Suivant</button>
     </div>
   </div>
 </div>
 
 <script>
 (function(){
-
   const steps=[
     {
-      group:"?CRITURE",
-      target:"BIBLE",
-      title:"Commence par les bases",
-      text:"Avant de tourner, pose les fondations de ton film. La Bible rassemble les informations importantes du projet.",
-      example:"Concept : un thriller de 8 minutes.\nTon : sombre et r?aliste.\nLieu principal : une maison isol?e."
+      title:"Bienvenue dans ton film",
+      text:"48H FILM DESK est maintenant pr?t. On va voir rapidement les quelques endroits qui vont vraiment te servir."
     },
     {
-      group:"?CRITURE",
-      target:"SC?NARIO",
-      title:"?cris ton histoire",
-      text:"Une fois l'id?e claire, construis ton histoire sc?ne par sc?ne dans le sc?nario.",
-      example:"SC?NE 01 ? INT. MAISON ? NUIT\nL?A entre dans le salon.\nLa lumi?re clignote.\nSon t?l?phone sonne."
+      title:"1 ? ?criture",
+      text:"Commence par la BIBLE, le SC?NARIO et les PERSONNAGES. L'objectif est d'avoir une base claire avant de pr?parer le tournage."
     },
     {
-      group:"PR?PRODUCTION",
-      target:"D?COUPAGE",
-      title:"Transforme l'histoire en plans",
-      text:"Le d?coupage te permet de d?cider comment chaque sc?ne sera r?ellement film?e.",
-      example:"SC?NE 01\nPlan 01 ? Plan large ? L?a entre\nPlan 02 ? Gros plan ? t?l?phone\nPlan 03 ? Gros plan ? regard de L?a"
+      title:"2 ? Pr?production",
+      text:"Le D?COUPAGE, le STORYBOARD et le PLAN DE TOURNAGE transforment ton sc?nario en quelque chose que tu peux r?ellement tourner."
     },
     {
-      group:"PR?PRODUCTION",
-      target:"PLAN DE TOURNAGE",
-      title:"Organise ta journ?e",
-      text:"Le plan de tournage rassemble les sc?nes et t'aide ? savoir quoi tourner, quand et dans quel ordre.",
-      example:"09:00 ? Sc?ne 01\n10:30 ? Sc?ne 03\n14:00 ? Sc?ne 05\n17:00 ? Plans de coupe"
+      title:"3 ? Plateau",
+      text:"Pendant le tournage, utilise TOURNAGE, BOARD, RUSHS et CONTINUIT? pour garder le contr?le sans te perdre."
     },
     {
-      group:"PLATEAU",
-      target:"TOURNAGE",
-      title:"Passe au plateau",
-      text:"C'est ici que ton sc?nario devient r?ellement un film. Utilise cette partie pour suivre ce qui est tourn?.",
-      example:"PLAN 12\nSc?ne 03 ? Gros plan ? L?a\n? Tourn?\n? ? garder"
+      title:"4 ? Post-production",
+      text:"Une fois les plans tourn?s, passe par MONTAGE, AUDIO, VFX, COLORIM?TRIE puis EXPORT."
     },
     {
-      group:"PLATEAU",
-      target:"RUSHS",
-      title:"Ne perds aucun bon plan",
-      text:"Les rushes servent ? retrouver et contr?ler ce que tu as r?ellement enregistr?.",
-      example:"Rush 0012 ? Sc?ne 03 ? OK\nRush 0013 ? Sc?ne 03 ? ? refaire\nRush 0014 ? Sc?ne 04 ? OK"
-    },
-    {
-      group:"POST-PRODUCTION",
-      target:"MONTAGE",
-      title:"Construis le film final",
-      text:"Apr?s le tournage, le montage rassemble les bons plans pour cr?er ton film.",
-      example:"Sc?ne 01 ? Sc?ne 02 ? Sc?ne 03\nPlans s?lectionn?s\nDur?e actuelle : 06:42"
-    },
-    {
-      group:"POST-PRODUCTION",
-      target:"EXPORT",
-      title:"Et tu termines ici",
-      text:"Quand ton film est termin?, l'export cr?e la version finale que tu peux regarder ou envoyer.",
-      example:"MASTER\n1080p ? H.264\nAudio inclus\n? Pr?t ? exporter"
-    },
-    {
-      group:null,
-      target:null,
-      title:"Tu n'as pas besoin de tout utiliser",
-      text:"Voil? l'essentiel. Avance simplement dans l'ordre qui correspond ? ton travail. Le reste est l? quand tu en as besoin.",
-      example:null
+      title:"C'est parti",
+      text:"Tu n'as pas besoin de tout utiliser imm?diatement. Commence par l'?tape qui correspond ? ton travail actuel."
     }
   ];
 
   let i=0;
 
-  function findTarget(name){
-    if(!name)return null;
-
-    const els=[...document.querySelectorAll("nav a")];
-
-    return els.find(el=>{
-      const txt=(el.textContent||"").trim().toUpperCase();
-      return txt===name.toUpperCase();
-    })||null;
-  }
-
-  function findGroup(name){
-    if(!name)return null;
-
-    const gs=[...document.querySelectorAll("nav .g")];
-
-    return gs.find(el=>{
-      return (el.textContent||"").trim().toUpperCase()===name.toUpperCase();
-    })||null;
-  }
-
-  function clearTargets(){
-    document.querySelectorAll(".F48_OB_NAV_TARGET").forEach(el=>{
-      el.classList.remove("F48_OB_NAV_TARGET");
-    });
-  }
-
-  function positionSpot(el){
-    const spot=document.getElementById("F48_OB_SPOT");
-    const arrow=document.getElementById("F48_OB_ARROW");
-
-    if(!el){
-      spot.style.display="none";
-      arrow.style.display="none";
-      return;
-    }
-
-    const r=el.getBoundingClientRect();
-
-    spot.style.display="block";
-    spot.style.left=(r.left-4)+"px";
-    spot.style.top=(r.top-4)+"px";
-    spot.style.width=(r.width+8)+"px";
-    spot.style.height=(r.height+8)+"px";
-
-    arrow.style.display="block";
-    arrow.style.left=Math.max(8,r.right+10)+"px";
-    arrow.style.top=(r.top+r.height/2-15)+"px";
-  }
-
-  function positionPanel(el){
-    const panel=document.getElementById("F48_OB_PANEL");
-
-    if(!el){
-      panel.style.left="50%";
-      panel.style.top="50%";
-      panel.style.transform="translate(-50%,-50%)";
-      return;
-    }
-
-    const r=el.getBoundingClientRect();
-    const pw=Math.min(500,window.innerWidth-32);
-
-    let left=r.right+38;
-
-    if(left+pw>window.innerWidth-16)
-      left=r.left;
-
-    let top=r.top;
-
-    if(top+260>window.innerHeight-16)
-      top=Math.max(16,window.innerHeight-276);
-
-    panel.style.left=left+"px";
-    panel.style.top=top+"px";
-    panel.style.transform="none";
-  }
-
   window.F48StartOnboarding=function(){
-
-    if(localStorage.getItem("f48_onboarding_seen"))return;
-
+    if(localStorage.getItem("f48_onboarding_seen")) return;
     i=0;
-
-    const root=document.getElementById("F48_ONBOARDING_V4");
-
-    if(!root)return;
-
-    root.classList.add("open");
     F48ObRender();
+    document.getElementById("F48_ONBOARDING_V3").classList.add("open");
   };
 
   window.F48ObRender=function(){
-
-    const step=steps[i];
-
-    clearTargets();
-
-    const target=findTarget(step.target);
-    const group=findGroup(step.group);
-
-    if(group)group.classList.add("F48_OB_NAV_TARGET");
-    if(target)target.classList.add("F48_OB_NAV_TARGET");
-
-    document.getElementById("F48_OB_STEP").textContent=
-      "PRISE EN MAIN ? "+(i+1)+" / "+steps.length;
-
-    document.getElementById("F48_OB_TITLE").textContent=step.title;
-    document.getElementById("F48_OB_TEXT").textContent=step.text;
-
-    const ex=document.getElementById("F48_OB_EXAMPLE");
-    const exText=document.getElementById("F48_OB_EXAMPLE_TEXT");
-
-    if(step.example){
-      ex.style.display="block";
-      exText.textContent=step.example;
-    }else{
-      ex.style.display="none";
-      exText.textContent="";
-    }
-
-    document.getElementById("F48_OB_NEXT").textContent=
-      i===steps.length-1?"Commencer":"Suivant";
-
-    const focus=target||group;
-
-    requestAnimationFrame(()=>{
-      positionSpot(focus);
-      positionPanel(focus);
-    });
+    const x=steps[i];
+    document.getElementById("F48_OB_STEP").textContent="PRISE EN MAIN ? "+(i+1)+" / "+steps.length;
+    document.getElementById("F48_OB_TITLE").textContent=x.title;
+    document.getElementById("F48_OB_TEXT").textContent=x.text;
+    document.getElementById("F48_OB_NEXT").textContent=i===steps.length-1?"Commencer":"Suivant";
   };
 
   window.F48ObNext=function(){
-
     if(i<steps.length-1){
       i++;
       F48ObRender();
@@ -2613,23 +2369,11 @@ nav();render();tick();
   };
 
   window.F48ObClose=function(){
-
     localStorage.setItem("f48_onboarding_seen","1");
-
-    clearTargets();
-
-    document.getElementById("F48_ONBOARDING_V4").classList.remove("open");
-    document.getElementById("F48_OB_SPOT").style.display="none";
-    document.getElementById("F48_OB_ARROW").style.display="none";
+    document.getElementById("F48_ONBOARDING_V3").classList.remove("open");
   };
-
-  window.addEventListener("resize",()=>{
-    if(document.getElementById("F48_ONBOARDING_V4")?.classList.contains("open"))
-      F48ObRender();
-  });
-
 })();
 </script>
-<!-- /F48_ONBOARDING_V4 -->
+<!-- /F48_ONBOARDING_V3 -->
 
 </body></html>
