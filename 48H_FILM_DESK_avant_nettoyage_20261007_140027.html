@@ -1061,7 +1061,7 @@ nav a:focus-visible{
 #F48_MAIN{
   position:relative;
   display:grid;
-  grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+  grid-template-columns:var(--f48-nav-w) minmax(0,1fr) var(--f48-ins-w);
   height:calc(100vh - 74px);
   min-height:0;
   overflow:hidden;
@@ -1471,7 +1471,7 @@ nav a:focus-visible{
 
 @media(max-width:800px){
   #F48_MAIN{
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+    grid-template-columns:190px minmax(0,1fr) 0;
   }
 
   #F48_INSPECTOR,
@@ -1484,348 +1484,6 @@ nav a:focus-visible{
   }
 }
 
-
-
-/* ============================================================
-   F48 WORKSPACE — CLEAN
-   ============================================================ */
-
-/* Workspace : NAVIGATION + CENTRE */
-#F48_MAIN{
-  display:grid !important;
-  grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
-  grid-template-rows:minmax(0,1fr) !important;
-  height:calc(100vh - 74px) !important;
-  min-height:0 !important;
-  overflow:hidden !important;
-}
-
-/* Centre */
-#F48_CENTER{
-  grid-column:2 !important;
-  grid-row:1 !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  width:auto !important;
-  height:100% !important;
-  overflow:auto !important;
-}
-
-/* Vue principale */
-#F48_CENTER > #v{
-  min-width:0 !important;
-  min-height:100% !important;
-}
-
-/* ============================================================
-   PANNEAUX INUTILES DU WORKSPACE
-   ============================================================ */
-
-/* Sécurité : même s'ils existent encore dans le HTML,
-   ils ne prennent absolument aucune place. */
-
-#F48_TIMELINE_PANEL,
-#F48_INSPECTOR,
-#F48_NAV_RESIZER,
-#F48_INS_RESIZER{
-  display:none !important;
-}
-
-/* ============================================================
-   NAVIGATION
-   ============================================================ */
-
-#nav{
-  grid-column:1 !important;
-  grid-row:1 !important;
-  width:var(--f48-nav-w,210px) !important;
-  min-width:var(--f48-nav-w,210px) !important;
-  max-width:var(--f48-nav-w,210px) !important;
-  height:100% !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-}
-
-/* ============================================================
-   GRANDES CATÉGORIES
-   ============================================================ */
-
-/* Les catégories sont les éléments .g dans nav() */
-
-#nav .g{
-  font-size:16px !important;
-  font-weight:800 !important;
-  line-height:1.35 !important;
-  letter-spacing:.015em !important;
-  text-transform:uppercase !important;
-  padding:12px 10px !important;
-  margin-top:8px !important;
-  color:var(--t,#f0efeb) !important;
-}
-
-/* Hover */
-#nav .g:hover{
-  color:#fff !important;
-}
-
-/* Catégorie ouverte */
-#nav .g[onclick]{
-  cursor:pointer !important;
-}
-
-/* ============================================================
-   SOUS-MODULES
-   ============================================================ */
-
-#nav a:not(.pn){
-  font-size:13px !important;
-  font-weight:500 !important;
-}
-
-/* ============================================================
-   MOBILE
-   ============================================================ */
-
-@media (max-width:900px){
-  #F48_MAIN{
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
-  }
-
-  #nav{
-    position:fixed !important;
-    left:0 !important;
-    top:74px !important;
-    bottom:0 !important;
-    z-index:1000 !important;
-  }
-
-  #F48_CENTER{
-    grid-c
-/* F48 CENTER OVERFLOW FIX */
-#F48_CENTER,
-#F48_CENTER > *,
-#F48_CENTER section,
-#F48_CENTER .page {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-olumn:1 !important;
-  }
-}
-
-
-/* ==================================================
-   F48 LAYOUT FIX
-   Ancienne timeline / inspector complètement masqués
-   ================================================== */
-
-#F48_TIMELINE_PANEL,
-#F48_TIMELINE,
-#F48_TIMELINE_HEAD,
-#F48_INSPECTOR,
-#F48_INSPECTOR_HEAD,
-#F48_INSPECTOR_BODY,
-#F48_NAV_RESIZER,
-#F48_INS_RESIZER {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    max-width: 0 !important;
-    max-height: 0 !important;
-    overflow: hidden !important;
-}
-
-#F48_MAIN {
-    display: grid !important;
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) !important;
-    width: 100% !important;
-    height: calc(100vh - 74px) !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-}
-
-#F48_CENTER {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    overflow: auto !important;
-}
-
-#v {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* ==================================================
-   BIBLE / CARTES
-   Empêche les champs redimensionnables de sortir
-   horizontalement de leur colonne.
-   ================================================== */
-
-#v,
-#v *,
-#v *::before,
-#v *::after {
-    box-sizing: border-box;
-}
-
-#v .grid,
-#v .cards,
-#v .cols,
-#v .row,
-#v .board,
-#v .bible,
-#v .bible-grid {
-    min-width: 0;
-    max-width: 100%;
-}
-
-#v textarea,
-#v input,
-#v select,
-#v button {
-    max-width: 100%;
-}
-
-#v textarea {
-    box-sizing: border-box !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-}
-
-/* Les éléments redimensionnables doivent rester
-   dans leur colonne. */
-#v [style*="resize"],
-#v textarea[style*="resize"] {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Correction générale des colonnes CSS Grid */
-#v [class*="grid"],
-#v [class*="cols"],
-#v [class*="column"] {
-    min-width: 0;
-}
-
-/* Correction des enfants flex qui refusent
-   de rétrécir et passent sous la colonne voisine. */
-#v [style*="display:flex"],
-#v [style*="display: flex"] {
-    min-width: 0;
-}
-
-#v [style*="display:flex"] > *,
-#v [style*="display: flex"] > * {
-    min-width: 0;
-}
-
-/* Les tableaux ne doivent jamais agrandir
-   la largeur globale de la page. */
-#v table {
-    max-width: 100%;
-    width: 100%;
-    table-layout: fixed;
-}
-
-#v td,
-#v th {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-/* Sécurité contre les longs textes */
-#v input,
-#v textarea,
-#v select,
-#v .card,
-#v .panel,
-#v .box {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-
-/* ============================================================
-   F48 FINAL FIX
-   ============================================================ */
-
-/* ------------------------------------------------------------
-   TIMELINE
-   Le centre ne réserve plus les 205px de l'ancienne timeline.
-   ------------------------------------------------------------ */
-
-#F48_CENTER{
-  grid-template-rows:minmax(0,1fr) !important;
-  min-height:0 !important;
-}
-
-#F48_CENTER > #v{
-  min-height:0 !important;
-  height:auto !important;
-}
-
-
-/* ------------------------------------------------------------
-   BIBLE
-   Chaque carte possède maintenant sa propre hauteur.
-   Agrandir une textarea ne redimensionne plus les voisines.
-   ------------------------------------------------------------ */
-
-#v .grid{
-  align-items:start !important;
-}
-
-#v .grid > .card{
-  align-self:start !important;
-  height:max-content !important;
-  min-height:0 !important;
-}
-
-
-/* ------------------------------------------------------------
-   TEXTAREAS DE LA BIBLE
-   On autorise uniquement le redimensionnement vertical.
-   ------------------------------------------------------------ */
-
-#v .grid > .card textarea{
-  display:block !important;
-  width:100% !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  resize:vertical !important;
-  box-sizing:border-box !important;
-}
-
-
-/* ------------------------------------------------------------
-   PROTECTION CONTRE LE DÉBORDEMENT HORIZONTAL
-   ------------------------------------------------------------ */
-
-#v .grid > .card{
-  min-width:0 !important;
-  max-width:100% !important;
-  overflow:hidden !important;
-}
-
-#v .grid > .card > *{
-  min-width:0 !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
-}
-
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head><body>
 <header><div><b>48H FILM DESK</b><small id="pn" class="mono"></small></div><div style="text-align:right"><small>TEMPS RESTANT</small><div id="cd">--:--:--</div></div></header>
 
@@ -1835,12 +1493,25 @@ olumn:1 !important;
   <section id="F48_CENTER">
     <section id="v"></section>
 
-    </section>
+    <div id="F48_TIMELINE_PANEL">
+      <div id="F48_TIMELINE_HEAD">
+        <span>PRODUCTION TIMELINE</span>
+        <span id="F48_TIMELINE_META"></span>
+      </div>
+      <div id="F48_TIMELINE"></div>
+    </div>
+  </section>
 
+  <aside id="F48_INSPECTOR">
+    <div id="F48_INSPECTOR_HEAD">
+      <span>INSPECTEUR</span>
+      <button id="F48_INSPECTOR_CLOSE" onclick="F48ToggleInspector()">?</button>
+    </div>
+    <div id="F48_INSPECTOR_BODY"></div>
+  </aside>
 
-
-
-
+  <div id="F48_NAV_RESIZER"></div>
+  <div id="F48_INS_RESIZER"></div>
 </main>
 
 <script>
@@ -2936,14 +2607,7 @@ function render1(){const v=$("#v");if(R2[mod])v.innerHTML=R2[mod]();else{render0
 migrate();
 
 /* ===== V3 : workspaces ===== */
-const WS=[
-  ["PROJET","",["DASHBOARD","TIMELINE","ASSISTANT","TÂCHES"]],
-  ["ÉCRITURE","",["BIBLE","SCÉNARIO","PERSONNAGES","LIEUX","CONTRAINTES"]],
-  ["PRÉPRODUCTION","",["DÉCOUPAGE","STORYBOARD","PLAN DE TOURNAGE","FEUILLE DE SERVICE"]],
-  ["PLATEAU","",["TOURNAGE","BOARD","RUSHS","AUDIO","LUMIÈRE","CONTINUITÉ"]],
-  ["POST-PRODUCTION","",["MONTAGE","AUDIO","VFX","COLORIMÉTRIE","EXPORT"]],
-  ["SYSTÈME","",["PROJETS","PARAMÈTRES"]]
-];
+const WS=[["PROJET","🎬",["DASHBOARD","TIMELINE","ASSISTANT","TÂCHES"]],["ÉCRITURE","✍️",["BIBLE","SCÉNARIO","PERSONNAGES","LIEUX","CONTRAINTES"]],["PRÉPRODUCTION","🎥",["DÉCOUPAGE","STORYBOARD","PLAN DE TOURNAGE","FEUILLE DE SERVICE"]],["PLATEAU","🎬",["TOURNAGE","BOARD","RUSHS","AUDIO","LUMIÈRE","CONTINUITÉ"]],["POST-PRODUCTION","🖥",["MONTAGE","AUDIO","VFX","COLORIMÉTRIE","EXPORT"]],["SYSTÈME","⚙",["PROJETS","PARAMÈTRES"]]];
 const R3={};let curWS="PROJET",PA=[],OPEN;
 try{OPEN=JSON.parse(localStorage.getItem("f48_open"))}catch(e){}OPEN=OPEN||{PROJET:1};
 const M1=migrate;migrate=()=>{M1();S.tasks=S.tasks||[];S.cons=S.cons||[];["bible","edit","color"].forEach(k=>S[k]=S[k]||{})};

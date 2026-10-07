@@ -1061,7 +1061,7 @@ nav a:focus-visible{
 #F48_MAIN{
   position:relative;
   display:grid;
-  grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+  grid-template-columns:var(--f48-nav-w) minmax(0,1fr) var(--f48-ins-w);
   height:calc(100vh - 74px);
   min-height:0;
   overflow:hidden;
@@ -1471,7 +1471,7 @@ nav a:focus-visible{
 
 @media(max-width:800px){
   #F48_MAIN{
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+    grid-template-columns:190px minmax(0,1fr) 0;
   }
 
   #F48_INSPECTOR,
@@ -1493,7 +1493,7 @@ nav a:focus-visible{
 /* Workspace : NAVIGATION + CENTRE */
 #F48_MAIN{
   display:grid !important;
-  grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+  grid-template-columns:var(--f48-nav-w,210px) minmax(0,1fr) !important;
   grid-template-rows:minmax(0,1fr) !important;
   height:calc(100vh - 74px) !important;
   min-height:0 !important;
@@ -1588,7 +1588,7 @@ nav a:focus-visible{
 
 @media (max-width:900px){
   #F48_MAIN{
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
+    grid-template-columns:1fr !important;
   }
 
   #nav{
@@ -1600,230 +1600,8 @@ nav a:focus-visible{
   }
 
   #F48_CENTER{
-    grid-c
-/* F48 CENTER OVERFLOW FIX */
-#F48_CENTER,
-#F48_CENTER > *,
-#F48_CENTER section,
-#F48_CENTER .page {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-olumn:1 !important;
+    grid-column:1 !important;
   }
-}
-
-
-/* ==================================================
-   F48 LAYOUT FIX
-   Ancienne timeline / inspector complètement masqués
-   ================================================== */
-
-#F48_TIMELINE_PANEL,
-#F48_TIMELINE,
-#F48_TIMELINE_HEAD,
-#F48_INSPECTOR,
-#F48_INSPECTOR_HEAD,
-#F48_INSPECTOR_BODY,
-#F48_NAV_RESIZER,
-#F48_INS_RESIZER {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    max-width: 0 !important;
-    max-height: 0 !important;
-    overflow: hidden !important;
-}
-
-#F48_MAIN {
-    display: grid !important;
-    grid-template-columns: var(--f48-nav-w, 210px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) !important;
-    width: 100% !important;
-    height: calc(100vh - 74px) !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-}
-
-#F48_CENTER {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    overflow: auto !important;
-}
-
-#v {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* ==================================================
-   BIBLE / CARTES
-   Empêche les champs redimensionnables de sortir
-   horizontalement de leur colonne.
-   ================================================== */
-
-#v,
-#v *,
-#v *::before,
-#v *::after {
-    box-sizing: border-box;
-}
-
-#v .grid,
-#v .cards,
-#v .cols,
-#v .row,
-#v .board,
-#v .bible,
-#v .bible-grid {
-    min-width: 0;
-    max-width: 100%;
-}
-
-#v textarea,
-#v input,
-#v select,
-#v button {
-    max-width: 100%;
-}
-
-#v textarea {
-    box-sizing: border-box !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-}
-
-/* Les éléments redimensionnables doivent rester
-   dans leur colonne. */
-#v [style*="resize"],
-#v textarea[style*="resize"] {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Correction générale des colonnes CSS Grid */
-#v [class*="grid"],
-#v [class*="cols"],
-#v [class*="column"] {
-    min-width: 0;
-}
-
-/* Correction des enfants flex qui refusent
-   de rétrécir et passent sous la colonne voisine. */
-#v [style*="display:flex"],
-#v [style*="display: flex"] {
-    min-width: 0;
-}
-
-#v [style*="display:flex"] > *,
-#v [style*="display: flex"] > * {
-    min-width: 0;
-}
-
-/* Les tableaux ne doivent jamais agrandir
-   la largeur globale de la page. */
-#v table {
-    max-width: 100%;
-    width: 100%;
-    table-layout: fixed;
-}
-
-#v td,
-#v th {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-/* Sécurité contre les longs textes */
-#v input,
-#v textarea,
-#v select,
-#v .card,
-#v .panel,
-#v .box {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-
-/* ============================================================
-   F48 FINAL FIX
-   ============================================================ */
-
-/* ------------------------------------------------------------
-   TIMELINE
-   Le centre ne réserve plus les 205px de l'ancienne timeline.
-   ------------------------------------------------------------ */
-
-#F48_CENTER{
-  grid-template-rows:minmax(0,1fr) !important;
-  min-height:0 !important;
-}
-
-#F48_CENTER > #v{
-  min-height:0 !important;
-  height:auto !important;
-}
-
-
-/* ------------------------------------------------------------
-   BIBLE
-   Chaque carte possède maintenant sa propre hauteur.
-   Agrandir une textarea ne redimensionne plus les voisines.
-   ------------------------------------------------------------ */
-
-#v .grid{
-  align-items:start !important;
-}
-
-#v .grid > .card{
-  align-self:start !important;
-  height:max-content !important;
-  min-height:0 !important;
-}
-
-
-/* ------------------------------------------------------------
-   TEXTAREAS DE LA BIBLE
-   On autorise uniquement le redimensionnement vertical.
-   ------------------------------------------------------------ */
-
-#v .grid > .card textarea{
-  display:block !important;
-  width:100% !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  resize:vertical !important;
-  box-sizing:border-box !important;
-}
-
-
-/* ------------------------------------------------------------
-   PROTECTION CONTRE LE DÉBORDEMENT HORIZONTAL
-   ------------------------------------------------------------ */
-
-#v .grid > .card{
-  min-width:0 !important;
-  max-width:100% !important;
-  overflow:hidden !important;
-}
-
-#v .grid > .card > *{
-  min-width:0 !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
 }
 
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head><body>
