@@ -1,6 +1,6 @@
 {
   "name": "48h-film-desk",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "48H FILM DESK - application de bureau",
   "main": "main.js",
   "scripts": {
@@ -22,11 +22,11 @@
   "build": {
     "appId": "com.flow.48hfilmdesk",
     "productName": "48H FILM DESK",
-  "publish": {
-  "provider": "github",
-  "owner": "jz7drztvjt-beep",
-  "repo": "48h-film-desk"
-  },
+    "publish": {
+      "provider": "github",
+      "owner": "jz7drztvjt-beep",
+      "repo": "48h-film-desk"
+    },
     "files": [
       "main.js",
       "splash.html",
