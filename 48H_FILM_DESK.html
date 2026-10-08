@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><title>48H FILM DESK</title>
 <script src="server-config.js"></script>
 <script src="sync-shim.js"></script>
@@ -1826,7 +1826,34 @@ olumn:1 !important;
   box-sizing:border-box !important;
 }
 
-</style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head><body>
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><style id="F48_NOTES_SCROLL_FIX_V1">
+.F48_NOTES_APP .F48_NOTES_SIDEBAR {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_SIDEBAR::-webkit-scrollbar {
+  width: 8px;
+}
+
+.F48_NOTES_APP .F48_NOTES_SIDEBAR {
+  scrollbar-width: auto;
+}
+
+.F48_NOTES_APP {
+  min-height: 0 !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_LIST {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+}
+</style>
+</head><body>
 <header><div><b>48H FILM DESK</b><small id="pn" class="mono"></small></div><div style="text-align:right"><small>TEMPS RESTANT</small><div id="cd">--:--:--</div></div></header>
 
 <main id="F48_MAIN">
@@ -2780,80 +2807,808 @@ function progOf(p){const t=S;S=p;
 
   function compactDashboard(){
 
-    if(mod!=="DASHBOARD")return;
+  if(mod!=="DASHBOARD")return;
 
-    const v=document.getElementById("v");
+  const v=document.getElementById("v");
 
-    if(!v)return;
+  if(!v)return;
+
+  try{
 
     const P=typeof prog==="function"?prog():[0,0,0,0];
+
     const left=Math.max(0,S.deadline-Date.now());
+
     const shots=S.shots||[];
+    const scenes=S.scenes||[];
+    const vfx=S.vfx||[];
+
     const valid=shots.filter(x=>x.ok).length;
 
-    let box=v.querySelector(".F48_DASH_COMPACT");
+    const filmed=shots.filter(x=>
+      Array.isArray(x.takes) && x.takes.length
+    ).length;
 
-    if(!box){
+    const best=shots.filter(x=>
+      Array.isArray(x.takes) &&
+      x.takes.some(t=>t.st==="MEILLEURE PRISE")
+    ).length;
 
-      box=document.createElement("div");
-      box.className="F48_DASH_COMPACT";
+    const vfxLeft=vfx.filter(x=>x.st!=="TERMINÉ").length;
 
-      const tabs=v.querySelector(".tabs");
+    const soundProblems=
+      typeof audioAlerts==="function"
+        ? audioAlerts().length
+        : 0;
 
-      if(tabs)tabs.insertAdjacentElement("afterend",box);
-      else v.prepend(box);
-    }
+    const remainingTasks=
+      typeof problems==="function"
+        ? problems().length
+        : 0;
 
     const avg=Math.round(
-      (P.reduce((a,b)=>a+b,0)||0)/Math.max(1,P.length)
+      (P.reduce((a,b)=>a+b,0)||0) /
+      Math.max(1,P.length)
     );
 
-    box.innerHTML=`
-      <div class="F48_DASH_METRIC">
-        <small>PROGRESSION</small>
-        <b>${avg}%</b>
-      </div>
+    /*
+      ----------------------------------------------------------
+      PRIORITÉ
+      ----------------------------------------------------------
+    */
 
-      <div class="F48_DASH_METRIC">
-        <small>TEMPS RESTANT</small>
-        <b>${hms(left)}</b>
-      </div>
+    let priorityTitle="Le film est sous contrôle";
+    let priorityText="Aucun blocage critique détecté.";
+    let priorityButton="";
+    let priorityClass="F48_DASH_OK";
 
-      <div class="F48_DASH_METRIC">
-        <small>PLANS ? S?CURISER</small>
-        <b>${Math.max(0,shots.length-valid)}</b>
+    const firstUnvalidated=shots.findIndex(x=>!x.ok);
+
+    if(firstUnvalidated>=0){
+
+      priorityTitle="Sécuriser le prochain plan";
+
+      priorityText=
+        "Un plan n'est pas encore validé. C'est la priorité avant de passer à la suite.";
+
+      priorityButton=
+        `<button class="F48_DASH_PRIMARY"
+          onclick="S.cur=${firstUnvalidated};go('TOURNAGE','PLATEAU')">
+          OUVRIR LE PLAN
+        </button>`;
+
+      priorityClass="F48_DASH_WARNING";
+    }
+
+    if(!shots.length && scenes.length){
+
+      priorityTitle="Transformer les scènes en plans";
+
+      priorityText=
+        "Ton scénario existe, mais aucun plan n'est encore préparé.";
+
+      priorityButton=
+        `<button class="F48_DASH_PRIMARY"
+          onclick="go('DÉCOUPAGE')">
+          OUVRIR LE DÉCOUPAGE
+        </button>`;
+
+      priorityClass="F48_DASH_WARNING";
+    }
+
+    if(!scenes.length){
+
+      priorityTitle="Commencer le film";
+
+      priorityText=
+        "Aucune scène n'est encore créée. C'est le premier élément à préparer.";
+
+      priorityButton=
+        `<button class="F48_DASH_PRIMARY"
+          onclick="go('SCÉNARIO')">
+          OUVRIR LE SCÉNARIO
+        </button>`;
+
+      priorityClass="F48_DASH_WARNING";
+    }
+
+    if(soundProblems>0){
+
+      priorityTitle="Vérifier le son";
+
+      priorityText=
+        soundProblems+
+        " problème(s) audio nécessite(nt) une vérification.";
+
+      priorityButton=
+        `<button class="F48_DASH_PRIMARY"
+          onclick="go('AUDIO')">
+          OUVRIR L'AUDIO
+        </button>`;
+
+      priorityClass="F48_DASH_WARNING";
+    }
+
+    /*
+      ----------------------------------------------------------
+      RISQUE TEMPS
+      ----------------------------------------------------------
+    */
+
+    let estimated=0;
+
+    try{
+
+      const sh=typeof shootPlan==="function"
+        ? shootPlan()
+        : [];
+
+      estimated=sh.reduce((total,g)=>{
+
+        const arr=Array.isArray(g.sh)?g.sh:[];
+
+        return total+
+          arr
+            .filter(x=>!x.ok)
+            .reduce((s,x)=>s+(Number(x.dur)||0),0);
+
+      },0);
+
+    }catch(e){}
+
+    const available=Math.floor(left/60000);
+
+    let riskText="Dans les temps";
+    let riskClass="F48_DASH_OK";
+
+    if(estimated>available && available>0){
+
+      riskText=
+        "Risque de dépassement";
+
+      riskClass="F48_DASH_DANGER";
+    }
+
+    /*
+      ----------------------------------------------------------
+      PHASE
+      ----------------------------------------------------------
+    */
+
+    let phase="ÉCRITURE";
+
+    if(scenes.length && !shots.length)
+      phase="PRÉPRODUCTION";
+
+    if(shots.length && filmed<shots.length)
+      phase="TOURNAGE";
+
+    if(filmed===shots.length && shots.length)
+      phase="POST-PRODUCTION";
+
+    if(avg>=90)
+      phase="FINALISATION";
+
+    /*
+      ----------------------------------------------------------
+      ALERTES
+      ----------------------------------------------------------
+    */
+
+    const alerts=[];
+
+    if(scenes.length && !shots.length)
+      alerts.push([
+        "DÉCOUPAGE",
+        "Des scènes existent mais aucun plan n'est préparé.",
+        "DÉCOUPAGE"
+      ]);
+
+    if(shots.length && filmed<shots.length)
+      alerts.push([
+        "TOURNAGE",
+        (shots.length-filmed)+" plan(s) n'ont encore aucune prise.",
+        "TOURNAGE"
+      ]);
+
+    if(soundProblems>0)
+      alerts.push([
+        "SON",
+        soundProblems+" problème(s) audio détecté(s).",
+        "AUDIO"
+      ]);
+
+    if(vfxLeft>0)
+      alerts.push([
+        "VFX",
+        vfxLeft+" effet(s) restent à terminer.",
+        "VFX"
+      ]);
+
+    if(!alerts.length)
+      alerts.push([
+        "AUCUNE ALERTE",
+        "Aucun blocage critique détecté.",
+        "DASHBOARD"
+      ]);
+
+    /*
+      ----------------------------------------------------------
+      RENDU
+      ----------------------------------------------------------
+    */
+
+    v.innerHTML=`
+
+      <style>
+
+        .F48_DASHBOARD_V3{
+          width:100%;
+          box-sizing:border-box;
+          padding:30px 34px 50px;
+          color:#f4f4f5;
+        }
+
+        .F48_DASH_TOP{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:30px;
+          margin-bottom:26px;
+        }
+
+        .F48_DASH_KICK{
+          color:#70747d;
+          font-size:10px;
+          font-weight:900;
+          letter-spacing:2px;
+          text-transform:uppercase;
+          margin-bottom:7px;
+        }
+
+        .F48_DASH_TITLE{
+          font-size:30px;
+          font-weight:900;
+          letter-spacing:-1px;
+        }
+
+        .F48_DASH_PHASE{
+          margin-top:7px;
+          color:#8c9098;
+          font-size:12px;
+        }
+
+        .F48_DASH_TIME{
+          min-width:180px;
+          padding:15px 18px;
+          border:1px solid #292d34;
+          border-radius:14px;
+          background:#14161a;
+          text-align:right;
+        }
+
+        .F48_DASH_TIME small{
+          display:block;
+          color:#6d727a;
+          font-size:9px;
+          font-weight:900;
+          letter-spacing:1.5px;
+        }
+
+        .F48_DASH_TIME b{
+          display:block;
+          margin-top:5px;
+          font-size:21px;
+          letter-spacing:-.5px;
+        }
+
+        .F48_DASH_PROGRESS{
+          padding:22px;
+          border:1px solid #292d34;
+          border-radius:16px;
+          background:#14161a;
+          margin-bottom:18px;
+        }
+
+        .F48_DASH_PROGRESS_HEAD{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:14px;
+        }
+
+        .F48_DASH_PROGRESS_HEAD span{
+          color:#858a92;
+          font-size:10px;
+          font-weight:900;
+          letter-spacing:1.5px;
+        }
+
+        .F48_DASH_PERCENT{
+          font-size:25px;
+          font-weight:900;
+        }
+
+        .F48_DASH_BAR{
+          height:9px;
+          border-radius:999px;
+          background:#292d34;
+          overflow:hidden;
+        }
+
+        .F48_DASH_BAR div{
+          height:100%;
+          width:${avg}%;
+          background:#f2f2f2;
+          border-radius:999px;
+          transition:width .3s ease;
+        }
+
+        .F48_DASH_PHASES{
+          display:grid;
+          grid-template-columns:repeat(4,1fr);
+          gap:8px;
+          margin-top:14px;
+        }
+
+        .F48_DASH_PHASE_ITEM{
+          color:#555a62;
+          font-size:9px;
+          font-weight:900;
+          letter-spacing:1px;
+        }
+
+        .F48_DASH_PHASE_ITEM.on{
+          color:#f0f0f0;
+        }
+
+        .F48_DASH_MAIN{
+          display:grid;
+          grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);
+          gap:18px;
+        }
+
+        .F48_DASH_CARD{
+          background:#14161a;
+          border:1px solid #292d34;
+          border-radius:16px;
+          padding:20px;
+        }
+
+        .F48_DASH_LABEL{
+          color:#777c84;
+          font-size:9px;
+          font-weight:900;
+          letter-spacing:1.5px;
+          text-transform:uppercase;
+          margin-bottom:13px;
+        }
+
+        .F48_DASH_PRIORITY{
+          min-height:190px;
+          display:flex;
+          flex-direction:column;
+          justify-content:center;
+        }
+
+        .F48_DASH_PRIORITY h2{
+          margin:0;
+          font-size:23px;
+          line-height:1.15;
+          letter-spacing:-.5px;
+        }
+
+        .F48_DASH_PRIORITY p{
+          max-width:620px;
+          margin:10px 0 18px;
+          color:#858a92;
+          font-size:12px;
+          line-height:1.5;
+        }
+
+        .F48_DASH_PRIMARY{
+          align-self:flex-start;
+          padding:10px 15px;
+          border:1px solid #454a53;
+          border-radius:8px;
+          background:#e9e9e9;
+          color:#111;
+          font-size:10px;
+          font-weight:900;
+          cursor:pointer;
+        }
+
+        .F48_DASH_PRIMARY:hover{
+          background:#fff;
+        }
+
+        .F48_DASH_STATS{
+          display:grid;
+          grid-template-columns:repeat(4,1fr);
+          gap:9px;
+        }
+
+        .F48_DASH_STAT{
+          padding:15px;
+          border:1px solid #292d34;
+          border-radius:11px;
+          background:#101216;
+        }
+
+        .F48_DASH_STAT small{
+          display:block;
+          color:#626770;
+          font-size:8px;
+          font-weight:900;
+          letter-spacing:1px;
+        }
+
+        .F48_DASH_STAT b{
+          display:block;
+          margin-top:7px;
+          font-size:22px;
+        }
+
+        .F48_DASH_ALERTS{
+          display:flex;
+          flex-direction:column;
+          gap:8px;
+        }
+
+        .F48_DASH_ALERT{
+          display:flex;
+          align-items:center;
+          gap:12px;
+          padding:12px;
+          border:1px solid #292d34;
+          border-radius:10px;
+          background:#101216;
+          cursor:pointer;
+        }
+
+        .F48_DASH_ALERT:hover{
+          background:#1a1d22;
+        }
+
+        .F48_DASH_ALERT_MARK{
+          width:7px;
+          height:32px;
+          border-radius:5px;
+          background:#777;
+        }
+
+        .F48_DASH_ALERT b{
+          display:block;
+          font-size:10px;
+        }
+
+        .F48_DASH_ALERT span{
+          display:block;
+          margin-top:3px;
+          color:#737880;
+          font-size:9px;
+        }
+
+        .F48_DASH_BOTTOM{
+          grid-column:1/-1;
+        }
+
+        .F48_DASH_QUICK{
+          display:grid;
+          grid-template-columns:repeat(4,1fr);
+          gap:9px;
+        }
+
+        .F48_DASH_QUICK button{
+          padding:16px;
+          border:1px solid #292d34;
+          border-radius:11px;
+          background:#101216;
+          color:#eee;
+          text-align:left;
+          cursor:pointer;
+        }
+
+        .F48_DASH_QUICK button:hover{
+          background:#1a1d22;
+          border-color:#4a4f58;
+        }
+
+        .F48_DASH_QUICK b{
+          display:block;
+          font-size:10px;
+          letter-spacing:.8px;
+        }
+
+        .F48_DASH_QUICK span{
+          display:block;
+          margin-top:5px;
+          color:#666b73;
+          font-size:9px;
+        }
+
+        .F48_DASH_OK{
+          border-color:#29352e;
+        }
+
+        .F48_DASH_WARNING{
+          border-color:#514629;
+        }
+
+        .F48_DASH_DANGER{
+          border-color:#542d2d;
+        }
+
+        @media(max-width:900px){
+
+          .F48_DASH_MAIN{
+            grid-template-columns:1fr;
+          }
+
+          .F48_DASH_BOTTOM{
+            grid-column:auto;
+          }
+
+          .F48_DASH_STATS{
+            grid-template-columns:repeat(2,1fr);
+          }
+
+          .F48_DASH_QUICK{
+            grid-template-columns:repeat(2,1fr);
+          }
+
+        }
+
+      </style>
+
+
+      <div class="F48_DASHBOARD_V3">
+
+        <div class="F48_DASH_TOP">
+
+          <div>
+
+            <div class="F48_DASH_KICK">
+              48H FILM DESK · PRODUCTION CONTROL
+            </div>
+
+            <div class="F48_DASH_TITLE">
+              ${esc(S.name||"MON FILM")}
+            </div>
+
+            <div class="F48_DASH_PHASE">
+              PHASE ACTUELLE · ${phase}
+            </div>
+
+          </div>
+
+          <div class="F48_DASH_TIME">
+
+            <small>TEMPS RESTANT</small>
+
+            <b class="mono">
+              ${hms(left)}
+            </b>
+
+          </div>
+
+        </div>
+
+
+        <div class="F48_DASH_PROGRESS">
+
+          <div class="F48_DASH_PROGRESS_HEAD">
+
+            <span>PROGRESSION DU FILM</span>
+
+            <div class="F48_DASH_PERCENT">
+              ${avg}%
+            </div>
+
+          </div>
+
+          <div class="F48_DASH_BAR">
+            <div></div>
+          </div>
+
+          <div class="F48_DASH_PHASES">
+
+            <div class="F48_DASH_PHASE_ITEM ${P[0]>=1?"on":""}">
+              ÉCRITURE
+            </div>
+
+            <div class="F48_DASH_PHASE_ITEM ${P[1]>=1?"on":""}">
+              PRÉPRODUCTION
+            </div>
+
+            <div class="F48_DASH_PHASE_ITEM ${P[2]>=1?"on":""}">
+              TOURNAGE
+            </div>
+
+            <div class="F48_DASH_PHASE_ITEM ${P[3]>=1?"on":""}">
+              POST-PRODUCTION
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="F48_DASH_MAIN">
+
+
+          <div class="F48_DASH_CARD F48_DASH_PRIORITY ${priorityClass}">
+
+            <div class="F48_DASH_LABEL">
+              PRIORITÉ N°1 · À FAIRE MAINTENANT
+            </div>
+
+            <h2>
+              ${esc(priorityTitle)}
+            </h2>
+
+            <p>
+              ${esc(priorityText)}
+            </p>
+
+            ${priorityButton}
+
+          </div>
+
+
+          <div class="F48_DASH_CARD">
+
+            <div class="F48_DASH_LABEL">
+              RISQUE PRODUCTION
+            </div>
+
+            <h2 style="margin:0;font-size:21px">
+              ${riskText}
+            </h2>
+
+            <p style="color:#777;font-size:10px;line-height:1.5">
+              Charge estimée :
+              <b>${estimated||0} min</b><br>
+              Temps disponible :
+              <b>${available} min</b>
+            </p>
+
+            <div class="${riskClass}" style="font-size:10px;font-weight:900">
+              ${riskText==="Dans les temps"?"✓ MARGE DISPONIBLE":"⚠ À SURVEILLER"}
+            </div>
+
+          </div>
+
+
+          <div class="F48_DASH_CARD" style="grid-column:1/-1">
+
+            <div class="F48_DASH_LABEL">
+              ÉTAT DE LA PRODUCTION
+            </div>
+
+            <div class="F48_DASH_STATS">
+
+              <div class="F48_DASH_STAT">
+                <small>SCÈNES</small>
+                <b>${scenes.length}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>PLANS</small>
+                <b>${shots.length}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>PLANS TOURNÉS</small>
+                <b>${filmed}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>VALIDÉS</small>
+                <b>${valid}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>MEILLEURES PRISES</small>
+                <b>${best}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>VFX RESTANTS</small>
+                <b>${vfxLeft}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>PROBLÈMES SON</small>
+                <b>${soundProblems}</b>
+              </div>
+
+              <div class="F48_DASH_STAT">
+                <small>TÂCHES RESTANTES</small>
+                <b>${remainingTasks}</b>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="F48_DASH_CARD">
+
+            <div class="F48_DASH_LABEL">
+              ALERTES
+            </div>
+
+            <div class="F48_DASH_ALERTS">
+
+              ${alerts.slice(0,5).map(a=>`
+
+                <div class="F48_DASH_ALERT"
+                     onclick="go('${a[2]}')">
+
+                  <div class="F48_DASH_ALERT_MARK"></div>
+
+                  <div>
+                    <b>${esc(a[0])}</b>
+                    <span>${esc(a[1])}</span>
+                  </div>
+
+                </div>
+
+              `).join("")}
+
+            </div>
+
+          </div>
+
+
+          <div class="F48_DASH_CARD">
+
+            <div class="F48_DASH_LABEL">
+              ACCÈS RAPIDES
+            </div>
+
+            <div class="F48_DASH_QUICK">
+
+              <button onclick="go('SCÉNARIO')">
+                <b>SCÉNARIO</b>
+                <span>Écriture du film</span>
+              </button>
+
+              <button onclick="go('DÉCOUPAGE')">
+                <b>DÉCOUPAGE</b>
+                <span>Plans et préparation</span>
+              </button>
+
+              <button onclick="go('TOURNAGE')">
+                <b>TOURNAGE</b>
+                <span>Plateau et prises</span>
+              </button>
+
+              <button onclick="go('MONTAGE')">
+                <b>MONTAGE</b>
+                <span>Post-production</span>
+              </button>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
       </div>
     `;
 
-    let action=box.nextElementSibling;
+  }catch(e){
 
-    if(!action||!action.classList.contains("F48_DASH_ACTION")){
+    console.warn("F48 Dashboard V3:",e);
 
-      action=document.createElement("div");
-      action.className="F48_DASH_ACTION";
-
-      box.insertAdjacentElement("afterend",action);
-    }
-
-    let label="Commencer le sc?nario";
-    let target="SC?NARIO";
-
-    if((S.scenes||[]).length){
-      label="Continuer le d?coupage";
-      target="D?COUPAGE";
-    }
-
-    if(shots.length){
-      label="Continuer le tournage";
-      target="TOURNAGE";
-    }
-
-    action.innerHTML=`
-      <small>? FAIRE MAINTENANT</small>
-      <b>${label}</b>
-      <button onclick="go('${target}')">OUVRIR</button>
-    `;
   }
+
+}
+
+  
 
   /* HOOK RENDER */
 
@@ -3707,70 +4462,69 @@ nav();render();tick();
 
   const steps=[
     {
-      group:"?CRITURE",
+      group:"ECRITURE",
       target:"BIBLE",
       title:"Commence par les bases",
       text:"Avant de tourner, pose les fondations de ton film. La Bible rassemble les informations importantes du projet.",
-      example:"Concept : un thriller de 8 minutes.\nTon : sombre et r?aliste.\nLieu principal : une maison isol?e."
+      example:"Concept : un thriller de 8 minutes.\nTon : sombre et r\u00E9aliste.\nLieu principal : une maison isol\u00E9e."
     },
     {
-      group:"?CRITURE",
-      target:"SC?NARIO",
-      title:"?cris ton histoire",
-      text:"Une fois l'id?e claire, construis ton histoire sc?ne par sc?ne dans le sc?nario.",
-      example:"SC?NE 01 ? INT. MAISON ? NUIT\nL?A entre dans le salon.\nLa lumi?re clignote.\nSon t?l?phone sonne."
+      group:"ECRITURE",
+      target:"SCENARIO",
+      title:"\u00C9cris ton histoire",
+      text:"Une fois l'id\u00E9e claire, construis ton histoire sc\u00E8ne par sc\u00E8ne dans le sc\u00E9nario.",
+      example:"SC\u00C8NE 01 \u2014 INT. MAISON \u2014 NUIT\nL\u00C9A entre dans le salon.\nLa lumi\u00E8re clignote.\nSon t\u00E9l\u00E9phone sonne."
     },
     {
-      group:"PR?PRODUCTION",
-      target:"D?COUPAGE",
+      group:"PREPRODUCTION",
+      target:"DECOUPAGE",
       title:"Transforme l'histoire en plans",
-      text:"Le d?coupage te permet de d?cider comment chaque sc?ne sera r?ellement film?e.",
-      example:"SC?NE 01\nPlan 01 ? Plan large ? L?a entre\nPlan 02 ? Gros plan ? t?l?phone\nPlan 03 ? Gros plan ? regard de L?a"
+      text:"Le d\u00E9coupage te permet de d\u00E9cider comment chaque sc\u00E8ne sera r\u00E9ellement film\u00E9e.",
+      example:"SC\u00C8NE 01\nPlan 01 \u2014 Plan large \u2014 L\u00E9a entre\nPlan 02 \u2014 Gros plan \u2014 t\u00E9l\u00E9phone\nPlan 03 \u2014 Gros plan \u2014 regard de L\u00E9a"
     },
     {
-      group:"PR?PRODUCTION",
+      group:"PREPRODUCTION",
       target:"PLAN DE TOURNAGE",
-      title:"Organise ta journ?e",
-      text:"Le plan de tournage rassemble les sc?nes et t'aide ? savoir quoi tourner, quand et dans quel ordre.",
-      example:"09:00 ? Sc?ne 01\n10:30 ? Sc?ne 03\n14:00 ? Sc?ne 05\n17:00 ? Plans de coupe"
+      title:"Organise ta journ\u00E9e",
+      text:"Le plan de tournage rassemble les sc\u00E8nes et t'aide \u00E0 savoir quoi tourner, quand et dans quel ordre.",
+      example:"09:00 \u2014 Sc\u00E8ne 01\n10:30 \u2014 Sc\u00E8ne 03\n14:00 \u2014 Sc\u00E8ne 05\n17:00 \u2014 Plans de coupe"
     },
     {
       group:"PLATEAU",
       target:"TOURNAGE",
       title:"Passe au plateau",
-      text:"C'est ici que ton sc?nario devient r?ellement un film. Utilise cette partie pour suivre ce qui est tourn?.",
-      example:"PLAN 12\nSc?ne 03 ? Gros plan ? L?a\n? Tourn?\n? ? garder"
+      text:"C'est ici que ton sc\u00E9nario devient r\u00E9ellement un film. Utilise cette partie pour suivre ce qui est tourn\u00E9.",
+      example:"PLAN 12\nSc\u00E8ne 03 \u2014 Gros plan \u2014 L\u00E9a\n\u2713 Tourn\u00E9\n\u26A0 \u00C0 garder"
     },
     {
       group:"PLATEAU",
       target:"RUSHS",
       title:"Ne perds aucun bon plan",
-      text:"Les rushes servent ? retrouver et contr?ler ce que tu as r?ellement enregistr?.",
-      example:"Rush 0012 ? Sc?ne 03 ? OK\nRush 0013 ? Sc?ne 03 ? ? refaire\nRush 0014 ? Sc?ne 04 ? OK"
+      text:"Les rushes servent \u00E0 retrouver et contr\u00F4ler ce que tu as r\u00E9ellement enregistr\u00E9.",
+      example:"Rush 0012 \u2014 Sc\u00E8ne 03 \u2014 OK\nRush 0013 \u2014 Sc\u00E8ne 03 \u2014 \u00C0 refaire\nRush 0014 \u2014 Sc\u00E8ne 04 \u2014 OK"
     },
     {
-      group:"POST-PRODUCTION",
+      group:"POSTPRODUCTION",
       target:"MONTAGE",
       title:"Construis le film final",
-      text:"Apr?s le tournage, le montage rassemble les bons plans pour cr?er ton film.",
-      example:"Sc?ne 01 ? Sc?ne 02 ? Sc?ne 03\nPlans s?lectionn?s\nDur?e actuelle : 06:42"
+      text:"Apr\u00E8s le tournage, le montage rassemble les bons plans pour cr\u00E9er ton film.",
+      example:"Sc\u00E8ne 01 \u2014 Sc\u00E8ne 02 \u2014 Sc\u00E8ne 03\nPlans s\u00E9lectionn\u00E9s\nDur\u00E9e actuelle : 06:42"
     },
     {
-      group:"POST-PRODUCTION",
+      group:"POSTPRODUCTION",
       target:"EXPORT",
       title:"Et tu termines ici",
-      text:"Quand ton film est termin?, l'export cr?e la version finale que tu peux regarder ou envoyer.",
-      example:"MASTER\n1080p ? H.264\nAudio inclus\n? Pr?t ? exporter"
+      text:"Quand ton film est termin\u00E9, l'export cr\u00E9e la version finale que tu peux regarder ou envoyer.",
+      example:"MASTER\n1080p \u2014 H.264\nAudio inclus\n\u2713 Pr\u00EAt \u00E0 exporter"
     },
     {
       group:null,
       target:null,
       title:"Tu n'as pas besoin de tout utiliser",
-      text:"Voil? l'essentiel. Avance simplement dans l'ordre qui correspond ? ton travail. Le reste est l? quand tu en as besoin.",
+      text:"Voil\u00E0 l'essentiel. Avance simplement dans l'ordre qui correspond \u00E0 ton travail. Le reste est l\u00E0 quand tu en as besoin.",
       example:null
     }
   ];
-
   let i=0;
 
   function findTarget(name){
@@ -3784,13 +4538,28 @@ nav();render();tick();
     })||null;
   }
 
+  function F48NormalizeText(v){
+    return (v||"")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^A-Z0-9]+/gi,"")
+      .toUpperCase();
+  }
+
   function findGroup(name){
     if(!name)return null;
 
-    const gs=[...document.querySelectorAll("nav .g")];
+    const wanted=F48NormalizeText(name);
 
-    return gs.find(el=>{
-      return (el.textContent||"").trim().toUpperCase()===name.toUpperCase();
+    const els=[
+      ...document.querySelectorAll("nav .g"),
+      ...document.querySelectorAll("nav [class*='g']"),
+      ...document.querySelectorAll("nav div"),
+      ...document.querySelectorAll("nav span")
+    ];
+
+    return els.find(el=>{
+      return F48NormalizeText(el.textContent)===wanted;
     })||null;
   }
 
@@ -3853,7 +4622,7 @@ nav();render();tick();
 
   window.F48StartOnboarding=function(){
 
-    if(localStorage.getItem("f48_onboarding_seen"))return;
+    /* F48_TUTO_UNLOCKED_V1 : tuto toujours relançable */
 
     i=0;
 
@@ -3935,4 +4704,3593 @@ nav();render();tick();
 </script>
 <!-- /F48_ONBOARDING_V4 -->
 
-</body></html>
+<!-- ============================================================
+     F48_NOTES_V1
+     Module Notes — style Apple Notes
+     ============================================================ -->
+
+<style id="F48_NOTES_V1">
+
+/* ============================================================
+   STRUCTURE
+   ============================================================ */
+
+.F48_NOTES_APP{
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    height:calc(100vh - 170px);
+    min-height:500px;
+    overflow:hidden;
+    border:1px solid #25272b;
+    border-radius:10px;
+    background:#0b0c0e;
+}
+
+.F48_NOTES_SIDEBAR{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    border-right:1px solid #25272b;
+    background:#101113;
+}
+
+.F48_NOTES_SIDE_TOP{
+    padding:12px;
+    border-bottom:1px solid #25272b;
+}
+
+.F48_NOTES_SEARCH{
+    width:100%;
+    box-sizing:border-box;
+    background:#1b1d21;
+    border:1px solid #2c2f34;
+    border-radius:7px;
+    color:#ddd;
+    padding:8px 10px;
+    outline:none;
+    font-size:12px;
+}
+
+.F48_NOTES_SEARCH:focus{
+    border-color:#555960;
+}
+
+.F48_NOTES_NEW{
+    width:100%;
+    margin-top:8px;
+}
+
+.F48_NOTES_LIST{
+    flex:1;
+    overflow-y:auto;
+    padding:7px;
+}
+
+.F48_NOTE_ITEM{
+    padding:10px;
+    margin-bottom:3px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:.12s;
+}
+
+.F48_NOTE_ITEM:hover{
+    background:#191b1f;
+}
+
+.F48_NOTE_ITEM.on{
+    background:#25282d;
+}
+
+.F48_NOTE_ITEM_TITLE{
+    color:#e2e2df;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.F48_NOTE_ITEM_PREVIEW{
+    margin-top:4px;
+    color:#777a80;
+    font-size:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.F48_NOTE_ITEM_DATE{
+    margin-top:5px;
+    color:#55585f;
+    font:9px "SF Mono",Consolas,monospace;
+}
+
+.F48_NOTES_EMPTY{
+    padding:30px 15px;
+    text-align:center;
+    color:#666970;
+    font-size:11px;
+}
+
+.F48_NOTES_EDITOR{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    background:#0b0c0e;
+}
+
+.F48_NOTES_TOOLBAR{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:8px 10px;
+    border-bottom:1px solid #25272b;
+    background:#101113;
+}
+
+.F48_NOTES_TOOLBAR button{
+    min-width:32px;
+    height:30px;
+    padding:0 9px;
+}
+
+.F48_NOTES_TOOL_SPACER{
+    flex:1;
+}
+
+.F48_NOTES_TITLE{
+    width:100%;
+    box-sizing:border-box;
+    padding:25px 40px 8px;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#eee;
+    font-size:25px;
+    font-weight:700;
+}
+
+.F48_NOTES_TITLE::placeholder{
+    color:#55585f;
+}
+
+.F48_NOTES_CONTENT{
+    flex:1;
+    overflow-y:auto;
+    padding:5px 40px 50px;
+    color:#d4d4d1;
+    font-size:14px;
+    line-height:1.7;
+    outline:none;
+}
+
+.F48_NOTES_CONTENT:empty:before{
+    content:"Commencez à écrire…";
+    color:#55585f;
+}
+
+.F48_NOTES_CONTENT b{
+    color:#fff;
+}
+
+.F48_NOTES_CONTENT h2{
+    margin:20px 0 8px;
+    color:#fff;
+    font-size:20px;
+}
+
+.F48_NOTES_CONTENT h3{
+    margin:16px 0 7px;
+    color:#fff;
+    font-size:16px;
+}
+
+.F48_NOTE_CHECK{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin:4px 0;
+}
+
+.F48_NOTE_CHECK input{
+    margin-top:5px;
+    accent-color:#aaa;
+}
+
+.F48_NOTE_CHECK.checked span{
+    color:#62656b;
+    text-decoration:line-through;
+}
+
+.F48_NOTES_STATUS{
+    padding:6px 12px;
+    border-top:1px solid #25272b;
+    color:#55585f;
+    font:9px "SF Mono",Consolas,monospace;
+}
+
+/* ============================================================
+   IMPRESSION
+   ============================================================ */
+
+@media print{
+
+    @page{
+        size:A4;
+        margin:16mm;
+    }
+
+    body.F48_PRINT_NOTE *{
+        visibility:hidden !important;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT,
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT *{
+        visibility:visible !important;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT{
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        box-sizing:border-box;
+        color:#111 !important;
+        background:#fff !important;
+        font-family:Arial,sans-serif;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT h1{
+        font-size:25px;
+        margin:0 0 5px;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT .F48_PRINT_META{
+        color:#777;
+        font-size:10px;
+        margin-bottom:20px;
+        border-bottom:1px solid #ddd;
+        padding-bottom:8px;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT .F48_PRINT_CONTENT{
+        font-size:12px;
+        line-height:1.65;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT input[type="checkbox"]{
+        appearance:none;
+        -webkit-appearance:none;
+        width:11px;
+        height:11px;
+        border:1px solid #555;
+        display:inline-block;
+        vertical-align:-1px;
+        margin-right:6px;
+        position:relative;
+    }
+
+    body.F48_PRINT_NOTE #F48_NOTE_PRINT input[type="checkbox"]:checked:after{
+        content:"✓";
+        position:absolute;
+        left:1px;
+        top:-4px;
+        font-size:12px;
+        color:#111;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media(max-width:700px){
+
+    .F48_NOTES_APP{
+        grid-template-columns:1fr;
+        height:auto;
+        min-height:650px;
+    }
+
+    .F48_NOTES_SIDEBAR{
+        max-height:220px;
+    }
+
+    .F48_NOTES_TITLE,
+    .F48_NOTES_CONTENT{
+        padding-left:20px;
+        padding-right:20px;
+    }
+}
+
+</style>
+
+<div id="F48_NOTE_PRINT"></div>
+
+<script id="F48_NOTES_V1">
+
+(function(){
+
+    console.log("[F48 NOTES] Module chargé");
+
+    /* --------------------------------------------------------
+       DONNÉES
+       -------------------------------------------------------- */
+
+    function ensureNotes(){
+
+        if(!S.notes){
+            S.notes = [];
+        }
+
+        if(!Array.isArray(S.notes)){
+            S.notes = [];
+        }
+
+        if(!S.notes.length){
+
+            S.notes.push({
+                id:uid(),
+                title:"Première note",
+                html:"",
+                created:Date.now(),
+                updated:Date.now()
+            });
+
+            S.noteCur = S.notes[0].id;
+
+        }else{
+
+            if(!S.noteCur || !S.notes.some(n=>n.id===S.noteCur)){
+                S.noteCur = S.notes[0].id;
+            }
+
+        }
+
+    }
+
+    ensureNotes();
+
+    /* --------------------------------------------------------
+       OUTILS
+       -------------------------------------------------------- */
+
+    function currentNote(){
+
+        ensureNotes();
+
+        return S.notes.find(n=>n.id===S.noteCur) || S.notes[0];
+
+    }
+
+    function noteText(html){
+
+        const d=document.createElement("div");
+        d.innerHTML=html||"";
+        return (d.innerText||"").replace(/\s+/g," ").trim();
+
+    }
+
+    function formatDate(ts){
+
+        try{
+
+            return new Date(ts).toLocaleDateString("fr-FR",{
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric"
+            });
+
+        }catch(e){
+
+            return "";
+
+        }
+
+    }
+
+    function saveNote(){
+
+        const n=currentNote();
+
+        if(!n)return;
+
+        const title=document.getElementById("F48_NOTE_TITLE");
+        const content=document.getElementById("F48_NOTE_CONTENT");
+
+        if(title){
+            n.title=title.value;
+        }
+
+        if(content){
+            n.html=content.innerHTML;
+        }
+
+        n.updated=Date.now();
+
+        save();
+
+    }
+
+    function selectNote(id){
+
+        saveNote();
+
+        S.noteCur=id;
+
+        save();
+
+        render();
+
+    }
+
+    /* --------------------------------------------------------
+       NOUVELLE NOTE
+       -------------------------------------------------------- */
+
+    window.F48NewNote=function(){
+
+        ensureNotes();
+
+        const n={
+            id:uid(),
+            title:"Nouvelle note",
+            html:"",
+            created:Date.now(),
+            updated:Date.now()
+        };
+
+        S.notes.unshift(n);
+        S.noteCur=n.id;
+
+        save();
+        render();
+
+        setTimeout(()=>{
+
+            const t=document.getElementById("F48_NOTE_TITLE");
+
+            if(t){
+                t.focus();
+                t.select();
+            }
+
+        },50);
+
+    };
+
+    /* --------------------------------------------------------
+       SUPPRIMER NOTE
+       -------------------------------------------------------- */
+
+    window.F48DeleteNote=function(){
+
+        const n=currentNote();
+
+        if(!n)return;
+
+        if(!confirm("Supprimer cette note ?"))return;
+
+        S.notes=S.notes.filter(x=>x.id!==n.id);
+
+        if(!S.notes.length){
+
+            S.notes.push({
+                id:uid(),
+                title:"Nouvelle note",
+                html:"",
+                created:Date.now(),
+                updated:Date.now()
+            });
+
+        }
+
+        S.noteCur=S.notes[0].id;
+
+        save();
+        render();
+
+    };
+
+    /* --------------------------------------------------------
+       FORMATTAGE
+       -------------------------------------------------------- */
+
+    window.F48NoteCommand=function(cmd){
+
+        const el=document.getElementById("F48_NOTE_CONTENT");
+
+        if(!el)return;
+
+        el.focus();
+
+        if(cmd==="check"){
+
+            document.execCommand(
+                "insertHTML",
+                false,
+                '<div class="F48_NOTE_CHECK"><input type="checkbox"><span>Nouvelle tâche</span></div>'
+            );
+
+        }else if(cmd==="h2"){
+
+            document.execCommand("formatBlock",false,"h2");
+
+        }else if(cmd==="h3"){
+
+            document.execCommand("formatBlock",false,"h3");
+
+        }else{
+
+            document.execCommand(cmd,false,null);
+
+        }
+
+        saveNote();
+
+    };
+
+    /* --------------------------------------------------------
+       CHECKBOX
+       -------------------------------------------------------- */
+
+    window.F48NoteCheck=function(input){
+
+        const row=input.closest(".F48_NOTE_CHECK");
+
+        if(row){
+
+            row.classList.toggle("checked",input.checked);
+
+        }
+
+        saveNote();
+
+    };
+
+    /* --------------------------------------------------------
+       IMPRESSION NOTE ACTUELLE
+       -------------------------------------------------------- */
+
+    window.F48PrintCurrentNote=function(){
+
+        saveNote();
+
+        const n=currentNote();
+
+        if(!n)return;
+
+        const box=document.getElementById("F48_NOTE_PRINT");
+
+        box.innerHTML=
+            '<h1>'+esc(n.title||"Note sans titre")+'</h1>'+
+            '<div class="F48_PRINT_META">'+
+                '48H FILM DESK · Note · '+formatDate(n.updated)+
+            '</div>'+
+            '<div class="F48_PRINT_CONTENT">'+
+                (n.html||"")+
+            '</div>';
+
+        document.body.classList.add("F48_PRINT_NOTE");
+
+        setTimeout(()=>{
+
+            window.print();
+
+            setTimeout(()=>{
+                document.body.classList.remove("F48_PRINT_NOTE");
+                box.innerHTML="";
+            },500);
+
+        },100);
+
+    };
+
+    /* --------------------------------------------------------
+       IMPRESSION DE TOUTES LES NOTES
+       -------------------------------------------------------- */
+
+    window.F48PrintAllNotes=function(){
+
+        saveNote();
+
+        const box=document.getElementById("F48_NOTE_PRINT");
+
+        box.innerHTML=S.notes.map((n,i)=>
+
+            '<section style="page-break-after:always">'+
+
+                '<h1>'+esc(n.title||"Note sans titre")+'</h1>'+
+
+                '<div class="F48_PRINT_META">'+
+                    '48H FILM DESK · Note '+(i+1)+'/'+S.notes.length+
+                    ' · '+formatDate(n.updated)+
+                '</div>'+
+
+                '<div class="F48_PRINT_CONTENT">'+
+                    (n.html||"")+
+                '</div>'+
+
+            '</section>'
+
+        ).join("");
+
+        document.body.classList.add("F48_PRINT_NOTE");
+
+        setTimeout(()=>{
+
+            window.print();
+
+            setTimeout(()=>{
+                document.body.classList.remove("F48_PRINT_NOTE");
+                box.innerHTML="";
+            },500);
+
+        },100);
+
+    };
+
+    /* --------------------------------------------------------
+       RENDU
+       -------------------------------------------------------- */
+
+    R3["NOTES"]=function(){
+
+        ensureNotes();
+
+        const n=currentNote();
+
+        const searchValue=window.F48NoteSearchValue||"";
+
+        const filtered=S.notes.filter(x=>{
+
+            const q=searchValue.toLowerCase().trim();
+
+            if(!q)return true;
+
+            return (
+                (x.title||"").toLowerCase().includes(q) ||
+                noteText(x.html).toLowerCase().includes(q)
+            );
+
+        });
+
+        return `
+
+        <div class="F48_NOTES_APP">
+
+            <aside class="F48_NOTES_SIDEBAR">
+
+                <div class="F48_NOTES_SIDE_TOP">
+
+                    <input
+                        class="F48_NOTES_SEARCH"
+                        placeholder="Rechercher…"
+                        value="${esc(searchValue)}"
+                        oninput="
+                            window.F48NoteSearchValue=this.value;
+                            render();
+                            setTimeout(()=>{
+                                const e=document.querySelector('.F48_NOTES_SEARCH');
+                                if(e){
+                                    e.focus();
+                                    e.selectionStart=e.selectionEnd=e.value.length;
+                                }
+                            },0);
+                        "
+                    >
+
+                    <button
+                        class="F48_NOTES_NEW"
+                        onclick="F48NewNote()"
+                    >
+                        + NOUVELLE NOTE
+                    </button>
+
+                </div>
+
+                <div class="F48_NOTES_LIST">
+
+                    ${
+                        filtered.length
+
+                        ?
+
+                        filtered.map(x=>`
+
+                            <div
+                                class="F48_NOTE_ITEM ${x.id===S.noteCur?"on":""}"
+                                onclick="F48SelectNote('${x.id}')"
+                            >
+
+                                <div class="F48_NOTE_ITEM_TITLE">
+                                    ${esc(x.title||"Note sans titre")}
+                                </div>
+
+                                <div class="F48_NOTE_ITEM_PREVIEW">
+                                    ${esc(noteText(x.html)||"Note vide")}
+                                </div>
+
+                                <div class="F48_NOTE_ITEM_DATE">
+                                    ${formatDate(x.updated)}
+                                </div>
+
+                            </div>
+
+                        `).join("")
+
+                        :
+
+                        '<div class="F48_NOTES_EMPTY">Aucune note trouvée.</div>'
+                    }
+
+                </div>
+
+            </aside>
+
+            <section class="F48_NOTES_EDITOR">
+
+                <div class="F48_NOTES_TOOLBAR">
+
+                    <button onclick="F48NoteCommand('bold')" title="Gras">
+                        <b>B</b>
+                    </button>
+
+                    <button onclick="F48NoteCommand('italic')" title="Italique">
+                        <i>I</i>
+                    </button>
+
+                    <button onclick="F48NoteCommand('h2')" title="Titre">
+                        T
+                    </button>
+
+                    <button onclick="F48NoteCommand('insertUnorderedList')" title="Liste">
+                        •
+                    </button>
+
+                    <button onclick="F48NoteCommand('check')" title="Case à cocher">
+                        ☑
+                    </button>
+
+                    <span class="F48_NOTES_TOOL_SPACER"></span>
+
+                    <button onclick="F48PrintCurrentNote()" title="Imprimer cette note">
+                        🖨
+                    </button>
+
+                    <button onclick="F48PrintAllNotes()" title="Imprimer toutes les notes">
+                        📄
+                    </button>
+
+                    <button
+                        class="red"
+                        onclick="F48DeleteNote()"
+                        title="Supprimer"
+                    >
+                        ✕
+                    </button>
+
+                </div>
+
+                <input
+                    id="F48_NOTE_TITLE"
+                    class="F48_NOTES_TITLE"
+                    value="${esc(n.title||"")}"
+                    placeholder="Titre"
+                    oninput="F48SaveNote()"
+                >
+
+                <div
+                    id="F48_NOTE_CONTENT"
+                    class="F48_NOTES_CONTENT"
+                    contenteditable="true"
+                    spellcheck="true"
+                    oninput="F48SaveNote()"
+                >${n.html||""}</div>
+
+                <div class="F48_NOTES_STATUS">
+                    ${S.notes.length} note(s) · dernière modification ${formatDate(n.updated)}
+                </div>
+
+            </section>
+
+        </div>
+
+        `;
+
+    };
+
+    /* --------------------------------------------------------
+       API GLOBALE
+       -------------------------------------------------------- */
+
+    window.F48SaveNote=saveNote;
+
+    window.F48SelectNote=function(id){
+        selectNote(id);
+    };
+
+    /* --------------------------------------------------------
+       AJOUTER NOTES AU WORKSPACE PROJET
+       -------------------------------------------------------- */
+
+    try{
+
+        const projectWS=WS.find(x=>x[0]==="PROJET");
+
+        if(projectWS && !projectWS[2].includes("NOTES")){
+            projectWS[2].push("NOTES");
+        }
+
+    }catch(e){
+
+        console.warn("[F48 NOTES] Impossible d'ajouter NOTES au workspace",e);
+
+    }
+
+    /* --------------------------------------------------------
+       MIGRATION DES PROJETS EXISTANTS
+       -------------------------------------------------------- */
+
+    try{
+
+        Object.values(ALL.list||{}).forEach(p=>{
+
+            if(!p.notes){
+                p.notes=[];
+            }
+
+            if(!p.notes.length){
+
+                p.notes.push({
+                    id:uid(),
+                    title:"Première note",
+                    html:"",
+                    created:Date.now(),
+                    updated:Date.now()
+                });
+
+            }
+
+            if(!p.noteCur){
+                p.noteCur=p.notes[0].id;
+            }
+
+        });
+
+        if(!S.notes){
+            S.notes=[];
+        }
+
+        if(!S.notes.length){
+
+            S.notes.push({
+                id:uid(),
+                title:"Première note",
+                html:"",
+                created:Date.now(),
+                updated:Date.now()
+            });
+
+            S.noteCur=S.notes[0].id;
+
+        }
+
+        save();
+
+    }catch(e){
+
+        console.warn("[F48 NOTES] Migration impossible",e);
+
+    }
+
+    /* --------------------------------------------------------
+       STYLE DU BOUTON NOTES
+       -------------------------------------------------------- */
+
+    setTimeout(()=>{
+
+        try{
+
+            nav();
+            render();
+
+        }catch(e){
+
+            console.error("[F48 NOTES] Render error",e);
+
+        }
+
+    },50);
+
+})();
+
+</script>
+
+<!-- F48_NOTES_KEYBOARD_FIX_V1 -->
+<script>
+(function(){
+
+    function isTypingInNotes(target){
+        if(!target) return false;
+
+        const el = target.nodeType === 1
+            ? target
+            : target.parentElement;
+
+        if(!el) return false;
+
+        // Champ titre ou contenu d'une note
+        if(
+            el.closest(".F48_NOTES_APP") ||
+            el.closest(".F48_NOTES_EDITOR") ||
+            el.closest(".F48_NOTES_CONTENT") ||
+            el.closest(".F48_NOTES_TITLE")
+        ){
+            return true;
+        }
+
+        // Sécurité supplémentaire pour les champs éditables
+        if(
+            el.tagName === "INPUT" ||
+            el.tagName === "TEXTAREA" ||
+            el.isContentEditable
+        ){
+            return true;
+        }
+
+        return false;
+    }
+
+    // Capture le clavier AVANT les raccourcis de l'application.
+    document.addEventListener("keydown", function(e){
+
+        if(!isTypingInNotes(e.target)) return;
+
+        // On laisse complètement le clavier normal fonctionner
+        // dans les notes.
+        //
+        // Les raccourcis de l'application ne doivent pas
+        // intercepter les touches saisies ici.
+        e.stopPropagation();
+
+    }, true);
+
+})();
+</script>
+<!-- /F48_NOTES_KEYBOARD_FIX_V1 -->
+<!-- F48_REMOVE_NTPV_SHORTCUTS_V1 -->
+
+<!-- /F48_NOTES_DELETE_FIX_V2 -->
+<script>
+/* F48_REMOVE_NOTE_DELETE_BUTTON_V1 */
+(function(){
+
+  function removeNoteDeleteButtons(){
+
+    document.querySelectorAll(".F48_NOTES_APP button").forEach(function(btn){
+
+      const txt = (btn.textContent || "").trim().toLowerCase();
+      const title = (btn.getAttribute("title") || "").trim().toLowerCase();
+      const aria = (btn.getAttribute("aria-label") || "").trim().toLowerCase();
+      const onclick = (btn.getAttribute("onclick") || "").toLowerCase();
+
+      if(
+        txt.includes("supprimer") ||
+        txt === "delete" ||
+        title.includes("supprimer") ||
+        title === "delete" ||
+        aria.includes("supprimer") ||
+        aria === "delete" ||
+        onclick.includes("f48deletenote") ||
+        onclick.includes("deletenote")
+      ){
+        btn.remove();
+      }
+
+    });
+
+  }
+
+  removeNoteDeleteButtons();
+
+  new MutationObserver(function(){
+    removeNoteDeleteButtons();
+  }).observe(document.body,{
+    childList:true,
+    subtree:true
+  });
+
+})();
+</script>
+<style id="F48_UI_CLEANUP_NOTES_TUTO_V1">
+
+/* =========================================================
+   F48 - VISIBILITE NOTES
+   ========================================================= */
+
+.F48_NOTES_APP {
+    min-height: 0 !important;
+    height: calc(100vh - 150px) !important;
+    display: flex !important;
+    overflow: hidden !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_SIDEBAR {
+    min-width: 260px !important;
+    max-width: 360px !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border-right: 1px solid rgba(255,255,255,.12) !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_LIST {
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.F48_NOTES_APP .F48_NOTE_ITEM {
+    cursor: pointer !important;
+    min-height: 58px !important;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.F48_NOTES_APP .F48_NOTE_ITEM:hover {
+    background: rgba(255,255,255,.06) !important;
+}
+
+.F48_NOTES_APP .F48_NOTE_ITEM.on,
+.F48_NOTES_APP .F48_NOTE_ITEM.active {
+    background: rgba(255,255,255,.10) !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_EDITOR {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_CONTENT {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 24px !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_TITLE {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    padding: 16px 24px !important;
+}
+
+.F48_NOTES_APP .F48_NOTES_TOOLBAR {
+    flex-shrink: 0 !important;
+}
+
+/* Scrollbars visibles */
+.F48_NOTES_APP ::-webkit-scrollbar {
+    width: 9px;
+}
+
+.F48_NOTES_APP ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.28);
+    border-radius: 8px;
+}
+
+.F48_NOTES_APP ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,.45);
+}
+
+
+/* =========================================================
+   F48 - ASSISTANT : MASQUE
+   ========================================================= */
+
+#assistant,
+.assistant,
+.assistant-panel,
+.assistant-container,
+.ai-assistant,
+.aiAssistant,
+#aiAssistant,
+#ai-assistant,
+[class*="assistant"],
+[id*="assistant"] {
+    display: none !important;
+}
+
+
+/* =========================================================
+   F48 - TUTO : VISIBILITE ET CLIC
+   ========================================================= */
+
+.F48_TUTO,
+.F48_TUTORIAL,
+.tutorial,
+.tuto,
+#tuto,
+#tutorial,
+#onboarding,
+.onboarding {
+    pointer-events: auto !important;
+}
+
+.F48_TUTO *,
+.F48_TUTORIAL *,
+.tutorial *,
+.tuto *,
+#tuto *,
+#tutorial *,
+#onboarding *,
+.onboarding * {
+    pointer-events: auto !important;
+}
+
+</style>
+
+<script>
+/* =========================================================
+   F48_UI_CLEANUP_NOTES_TUTO_V1
+   ========================================================= */
+
+(function(){
+
+    function f48RemoveAssistant(){
+
+        const selectors = [
+            "#assistant",
+            ".assistant",
+            ".assistant-panel",
+            ".assistant-container",
+            ".ai-assistant",
+            ".aiAssistant",
+            "#aiAssistant",
+            "#ai-assistant"
+        ];
+
+        selectors.forEach(function(selector){
+            document.querySelectorAll(selector).forEach(function(el){
+                el.remove();
+            });
+        });
+
+        document.querySelectorAll("body *").forEach(function(el){
+
+            const text = (el.textContent || "").trim().toLowerCase();
+
+            if(
+                text === "assistant" ||
+                text === "ouvrir l'assistant" ||
+                text === "assistant ia"
+            ){
+                if(
+                    el.tagName === "BUTTON" ||
+                    el.tagName === "A"
+                ){
+                    el.remove();
+                }
+            }
+
+        });
+
+    }
+
+
+    function f48FixNotes(){
+
+        document.querySelectorAll(".F48_NOTES_APP").forEach(function(app){
+
+            const sidebar = app.querySelector(".F48_NOTES_SIDEBAR");
+            const list = app.querySelector(".F48_NOTES_LIST");
+            const editor = app.querySelector(".F48_NOTES_EDITOR");
+            const content = app.querySelector(".F48_NOTES_CONTENT");
+
+            if(sidebar){
+                sidebar.style.overflowY = "auto";
+                sidebar.style.overflowX = "hidden";
+                sidebar.style.minHeight = "0";
+            }
+
+            if(list){
+                list.style.overflowY = "auto";
+                list.style.overflowX = "hidden";
+                list.style.minHeight = "0";
+            }
+
+            if(editor){
+                editor.style.minHeight = "0";
+                editor.style.overflow = "hidden";
+            }
+
+            if(content){
+                content.style.overflowY = "auto";
+                content.style.overflowX = "hidden";
+            }
+
+        });
+
+    }
+
+
+    function f48FixTutorial(){
+
+        const candidates = [
+            ".F48_TUTO",
+            ".F48_TUTORIAL",
+            ".tutorial",
+            ".tuto",
+            "#tuto",
+            "#tutorial",
+            "#onboarding",
+            ".onboarding"
+        ];
+
+        candidates.forEach(function(selector){
+
+            document.querySelectorAll(selector).forEach(function(el){
+
+                el.style.pointerEvents = "auto";
+
+                el.querySelectorAll("button,a,[role='button']").forEach(function(btn){
+                    btn.style.pointerEvents = "auto";
+                    btn.style.cursor = "pointer";
+                });
+
+            });
+
+        });
+
+    }
+
+
+    function f48Repair(){
+
+        f48RemoveAssistant();
+        f48FixNotes();
+        f48FixTutorial();
+
+    }
+
+
+    f48Repair();
+
+    document.addEventListener("DOMContentLoaded", f48Repair);
+
+    document.addEventListener("click", function(){
+        setTimeout(f48Repair, 50);
+    }, true);
+
+    new MutationObserver(function(){
+        f48Repair();
+    }).observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+
+    window.F48RepairInterface = f48Repair;
+
+})();
+</script>
+<script>
+/* =========================================================
+   F48_TUTO_REPAIR_REAL_V1
+   Réactivation du tutoriel existant
+   ========================================================= */
+
+(function(){
+
+    function f48FindTutorial(){
+
+        const selectors = [
+            "#F48_ONBOARDING",
+            "#F48_OB",
+            ".F48_ONBOARDING",
+            ".F48_TUTORIAL",
+            ".F48_TUTO",
+            "#onboarding",
+            "#tutorial",
+            "#tuto"
+        ];
+
+        for(const selector of selectors){
+
+            const el = document.querySelector(selector);
+
+            if(el){
+                return el;
+            }
+
+        }
+
+        const next = document.getElementById("F48_OB_NEXT");
+
+        if(next){
+
+            let el = next.parentElement;
+
+            for(let i=0;i<8 && el;i++,el=el.parentElement){
+
+                const txt = (el.textContent || "").toLowerCase();
+
+                if(
+                    txt.includes("suivant") &&
+                    txt.length < 5000
+                ){
+                    return el;
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+
+    function f48ShowTutorial(){
+
+        const tuto = f48FindTutorial();
+
+        if(!tuto){
+
+            console.warn("F48 TUTO : élément introuvable");
+
+            return false;
+        }
+
+        tuto.style.display = "flex";
+        tuto.style.visibility = "visible";
+        tuto.style.opacity = "1";
+        tuto.style.pointerEvents = "auto";
+        tuto.style.zIndex = "999999";
+
+        tuto.querySelectorAll("*").forEach(function(el){
+
+            el.style.pointerEvents = "auto";
+
+        });
+
+        const next = document.getElementById("F48_OB_NEXT");
+
+        if(next){
+
+            next.style.display = "";
+            next.style.visibility = "visible";
+            next.style.pointerEvents = "auto";
+            next.style.cursor = "pointer";
+
+            next.onclick = function(e){
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                if(typeof window.F48ObNext === "function"){
+
+                    window.F48ObNext();
+
+                }else{
+
+                    console.warn(
+                        "F48 TUTO : F48ObNext introuvable"
+                    );
+
+                }
+
+            };
+
+        }
+
+        return true;
+    }
+
+
+    window.F48OpenTutorial = function(){
+
+        console.log("F48 TUTO : ouverture");
+
+        return f48ShowTutorial();
+
+    };
+
+
+    window.F48StartTutorial = window.F48OpenTutorial;
+
+
+    /*
+       Cherche automatiquement les boutons existants
+       qui servaient à lancer le tuto.
+    */
+
+    function f48HookTutorialButtons(){
+
+        document.querySelectorAll(
+            "button,a,[role='button']"
+        ).forEach(function(btn){
+
+            if(btn.dataset.f48TutoHooked === "1"){
+                return;
+            }
+
+            const text =
+                (btn.textContent || "")
+                .trim()
+                .toLowerCase();
+
+            const title =
+                (btn.getAttribute("title") || "")
+                .toLowerCase();
+
+            if(
+                text.includes("tuto") ||
+                text.includes("découvrir") ||
+                text.includes("decouvrir") ||
+                text.includes("commencer") ||
+                title.includes("tuto") ||
+                title.includes("tutorial")
+            ){
+
+                btn.dataset.f48TutoHooked = "1";
+
+                btn.addEventListener(
+                    "click",
+                    function(){
+
+                        setTimeout(
+                            f48ShowTutorial,
+                            50
+                        );
+
+                    },
+                    true
+                );
+
+            }
+
+        });
+
+    }
+
+
+    /*
+       On ne lance PAS automatiquement le tuto.
+       On le rend simplement accessible.
+    */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function(){
+
+            setTimeout(
+                f48HookTutorialButtons,
+                200
+            );
+
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        function(){
+
+            setTimeout(
+                f48HookTutorialButtons,
+                100
+            );
+
+        },
+        true
+    );
+
+
+    /*
+       Sécurité : si le tuto est créé plus tard
+       par render(), on le détecte.
+    */
+
+    new MutationObserver(function(){
+
+        f48HookTutorialButtons();
+
+    }).observe(
+        document.documentElement,
+        {
+            childList:true,
+            subtree:true
+        }
+    );
+
+
+    console.log(
+        "F48 TUTO REPAIR : actif"
+    );
+
+})();
+</script>
+<!-- F48_DASHBOARD_SAFE_V1 -->
+<style id="F48_DASHBOARD_SAFE_CSS">
+
+.F48_SAFE_DASH{
+  width:100%;
+  max-width:1500px;
+  margin:0 auto;
+  padding:30px 36px 60px;
+  box-sizing:border-box;
+}
+
+.F48_SAFE_HEAD{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:25px;
+  margin-bottom:25px;
+}
+
+.F48_SAFE_KICK{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.18em;
+  opacity:.45;
+}
+
+.F48_SAFE_TITLE{
+  margin:7px 0 5px;
+  font-size:34px;
+  line-height:1.05;
+  letter-spacing:-.035em;
+}
+
+.F48_SAFE_SUB{
+  font-size:12px;
+  opacity:.45;
+}
+
+.F48_SAFE_STATE{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 15px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.05em;
+}
+
+.F48_SAFE_DOT{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#70df9b;
+}
+
+.F48_SAFE_STATE.warn .F48_SAFE_DOT{
+  background:#ffbd55;
+}
+
+.F48_SAFE_STATE.danger .F48_SAFE_DOT{
+  background:#ff6262;
+}
+
+.F48_SAFE_HERO{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 280px;
+  gap:15px;
+  margin-bottom:15px;
+}
+
+.F48_SAFE_CARD{
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:17px;
+  padding:23px;
+  box-sizing:border-box;
+}
+
+.F48_SAFE_LABEL{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.15em;
+  opacity:.42;
+  text-transform:uppercase;
+}
+
+.F48_SAFE_PROGRESS_TOP{
+  display:flex;
+  align-items:flex-end;
+  gap:20px;
+  margin-top:13px;
+}
+
+.F48_SAFE_PERCENT{
+  font-size:52px;
+  line-height:1;
+  font-weight:850;
+  letter-spacing:-.06em;
+}
+
+.F48_SAFE_BAR{
+  flex:1;
+  height:9px;
+  margin-bottom:7px;
+  border-radius:99px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+
+.F48_SAFE_BAR>div{
+  height:100%;
+  border-radius:99px;
+  background:currentColor;
+}
+
+.F48_SAFE_META{
+  margin-top:9px;
+  font-size:10px;
+  opacity:.4;
+}
+
+.F48_SAFE_TIME{
+  margin-top:9px;
+  font-size:36px;
+  font-weight:850;
+  letter-spacing:-.05em;
+}
+
+.F48_SAFE_TIME.warn{
+  color:#ffbd55;
+}
+
+.F48_SAFE_TIME.danger{
+  color:#ff6262;
+}
+
+.F48_SAFE_NOW{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom:15px;
+  padding:20px 22px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.05);
+}
+
+.F48_SAFE_NOW_ICON{
+  width:43px;
+  height:43px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  font-size:19px;
+  font-weight:900;
+}
+
+.F48_SAFE_NOW_BODY{
+  flex:1;
+  min-width:0;
+}
+
+.F48_SAFE_NOW_TITLE{
+  margin-top:5px;
+  font-size:19px;
+  font-weight:800;
+}
+
+.F48_SAFE_NOW_DESC{
+  margin-top:4px;
+  font-size:11px;
+  opacity:.45;
+}
+
+.F48_SAFE_OPEN{
+  border:0;
+  border-radius:9px;
+  padding:11px 17px;
+  background:rgba(255,255,255,.11);
+  color:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.F48_SAFE_OPEN:hover{
+  background:rgba(255,255,255,.18);
+}
+
+.F48_SAFE_STATS{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:9px;
+  margin-bottom:15px;
+}
+
+.F48_SAFE_STAT{
+  padding:15px 17px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);
+}
+
+.F48_SAFE_STAT_LABEL{
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.12em;
+  opacity:.4;
+}
+
+.F48_SAFE_STAT_VALUE{
+  margin-top:6px;
+  font-size:24px;
+  font-weight:800;
+}
+
+.F48_SAFE_STAT_SUB{
+  margin-top:2px;
+  font-size:9px;
+  opacity:.35;
+}
+
+.F48_SAFE_COLUMNS{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.F48_SAFE_PANEL{
+  padding:21px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);
+}
+
+.F48_SAFE_PANEL_TITLE{
+  margin-top:5px;
+  margin-bottom:15px;
+  font-size:16px;
+  font-weight:800;
+}
+
+.F48_SAFE_LINE{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:11px 0;
+  border-top:1px solid rgba(255,255,255,.055);
+  font-size:11px;
+}
+
+.F48_SAFE_LINE span{
+  opacity:.5;
+}
+
+.F48_SAFE_ALERT{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 0;
+  border-top:1px solid rgba(255,255,255,.055);
+}
+
+.F48_SAFE_ALERT_ICON{
+  width:27px;
+  height:27px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:rgba(255,255,255,.07);
+  font-weight:800;
+}
+
+.F48_SAFE_ALERT strong,
+.F48_SAFE_ALERT small{
+  display:block;
+}
+
+.F48_SAFE_ALERT strong{
+  font-size:11px;
+}
+
+.F48_SAFE_ALERT small{
+  margin-top:2px;
+  font-size:8px;
+  opacity:.35;
+  letter-spacing:.08em;
+}
+
+.F48_SAFE_EMPTY{
+  padding:16px 0;
+  font-size:11px;
+  opacity:.45;
+}
+
+.F48_SAFE_QUICK_LABEL{
+  margin-bottom:10px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.15em;
+  opacity:.4;
+}
+
+.F48_SAFE_QUICK{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:9px;
+}
+
+.F48_SAFE_QUICK button{
+  padding:15px;
+  text-align:left;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);
+  color:inherit;
+  cursor:pointer;
+}
+
+.F48_SAFE_QUICK button:hover{
+  background:rgba(255,255,255,.07);
+}
+
+.F48_SAFE_QUICK small,
+.F48_SAFE_QUICK strong{
+  display:block;
+}
+
+.F48_SAFE_QUICK small{
+  font-size:8px;
+  opacity:.3;
+}
+
+.F48_SAFE_QUICK strong{
+  margin-top:6px;
+  font-size:11px;
+}
+
+@media(max-width:900px){
+  .F48_SAFE_DASH{
+    padding:20px;
+  }
+
+  .F48_SAFE_HEAD{
+    flex-direction:column;
+  }
+
+  .F48_SAFE_HERO{
+    grid-template-columns:1fr;
+  }
+
+  .F48_SAFE_STATS{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .F48_SAFE_COLUMNS{
+    grid-template-columns:1fr;
+  }
+
+  .F48_SAFE_QUICK{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px){
+  .F48_SAFE_TITLE{
+    font-size:27px;
+  }
+
+  .F48_SAFE_NOW{
+    flex-wrap:wrap;
+  }
+
+  .F48_SAFE_OPEN{
+    width:100%;
+  }
+
+  .F48_SAFE_PROGRESS_TOP{
+    gap:12px;
+  }
+
+  .F48_SAFE_PERCENT{
+    font-size:40px;
+  }
+}
+
+</style>
+
+<script>
+(function(){
+
+  if(window.F48_DASHBOARD_SAFE_V1)return;
+  window.F48_DASHBOARD_SAFE_V1=true;
+
+  function f48Esc(v){
+    try{
+      if(typeof esc==="function")return esc(String(v??""));
+    }catch(e){}
+
+    return String(v??"")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  function f48Dashboard(){
+
+    try{
+
+      if(typeof mod==="undefined")return;
+      if(mod!=="DASHBOARD")return;
+      if(typeof S==="undefined")return;
+
+      var v=document.getElementById("v");
+      if(!v)return;
+
+      var shots=Array.isArray(S.shots)?S.shots:[];
+      var scenes=Array.isArray(S.scenes)?S.scenes:[];
+
+      var doneShots=shots.filter(function(x){
+        return x&&x.ok;
+      }).length;
+
+      var todoShots=Math.max(
+        0,
+        shots.length-doneShots
+      );
+
+      var percent=0;
+
+      try{
+
+        if(typeof prog==="function"){
+
+          var pp=prog();
+
+          if(Array.isArray(pp)){
+
+            var nums=pp
+              .map(Number)
+              .filter(Number.isFinite);
+
+            if(nums.length){
+
+              percent=Math.round(
+                nums.reduce(function(a,b){
+                  return a+b;
+                },0)/nums.length
+              );
+
+            }
+
+          }
+
+        }
+
+      }catch(e){}
+
+      if(!percent&&shots.length){
+        percent=Math.round(
+          doneShots/shots.length*100
+        );
+      }
+
+      var minutes=0;
+
+      try{
+
+        if(S.deadline){
+          minutes=Math.max(
+            0,
+            Math.round(
+              (S.deadline-Date.now())/60000
+            )
+          );
+        }
+
+      }catch(e){}
+
+      var hours=Math.floor(minutes/60);
+      var mins=minutes%60;
+
+      var estimate={
+        need:0,
+        left:minutes,
+        todo:todoShots
+      };
+
+      try{
+
+        if(typeof est==="function"){
+
+          var ee=est();
+
+          if(ee){
+
+            estimate.need=
+              Number(ee.need)||0;
+
+            estimate.left=
+              Number(ee.left)||minutes;
+
+            estimate.todo=
+              Number(ee.todo)||todoShots;
+
+          }
+
+        }
+
+      }catch(e){}
+
+      var risks=[];
+
+      try{
+
+        if(typeof problems==="function"){
+
+          var pp2=problems();
+
+          if(Array.isArray(pp2)){
+            risks=pp2;
+          }
+
+        }
+
+      }catch(e){}
+
+      var urgent=[];
+
+      try{
+
+        if(typeof urgentTasks==="function"){
+
+          var uu=urgentTasks();
+
+          if(Array.isArray(uu)){
+            urgent=uu;
+          }
+
+        }
+
+      }catch(e){}
+
+      var late=
+        estimate.need>estimate.left &&
+        estimate.need>0;
+
+      var state=late
+        ?"danger"
+        :(risks.length||urgent.length)
+          ?"warn"
+          :"good";
+
+      var stateText=late
+        ?"RISQUE DE RETARD"
+        :(risks.length||urgent.length)
+          ?"ATTENTION"
+          :"SOUS CONTRÔLE";
+
+      var actionTitle="";
+      var actionDesc="";
+      var actionModule="DASHBOARD";
+
+      if(late){
+
+        actionTitle="RATTRAPER LE RETARD";
+        actionDesc=
+          "La charge restante dépasse le temps disponible.";
+        actionModule="PLAN DE TOURNAGE";
+
+      }else if(todoShots>0){
+
+        actionTitle="SÉCURISER LES PLANS RESTANTS";
+        actionDesc=
+          todoShots+
+          " plan(s) restent à tourner ou valider.";
+        actionModule="TOURNAGE";
+
+      }else if(urgent.length){
+
+        actionTitle="TRAITER LA PROCHAINE URGENCE";
+        actionDesc=
+          urgent.length+
+          " tâche(s) nécessitent ton attention.";
+        actionModule="TÂCHES";
+
+      }else if(risks.length){
+
+        actionTitle="ÉLIMINER LES RISQUES";
+        actionDesc=
+          risks.length+
+          " point(s) nécessitent ton attention.";
+
+      }else{
+
+        actionTitle="POURSUIVRE LA PRODUCTION";
+        actionDesc=
+          "Le projet avance normalement.";
+
+      }
+
+      var filmName=
+        S.name||
+        S.title||
+        "MON FILM";
+
+      var sceneDone=scenes.filter(function(x){
+        return x&&(
+          x.done||
+          x.ok||
+          x.complete||
+          x.completed
+        );
+      }).length;
+
+      var vfx=
+        Array.isArray(S.vfx)
+        ?S.vfx
+        :[];
+
+      var vfxDone=vfx.filter(function(x){
+        return x&&(
+          x.done||
+          x.ok||
+          x.complete||
+          x.completed||
+          x.st==="TERMINÉ"
+        );
+      }).length;
+
+      var vfxLeft=Math.max(
+        0,
+        vfx.length-vfxDone
+      );
+
+      var pct=Math.max(
+        0,
+        Math.min(
+          100,
+          Number(percent)||0
+        )
+      );
+
+      var timeClass=
+        minutes<180
+        ?"danger"
+        :minutes<360
+          ?"warn"
+          :"";
+
+      var alerts="";
+
+      urgent.slice(0,3).forEach(function(x){
+
+        var label=
+          x&&(
+            x.n||
+            x.title||
+            x.name
+          );
+
+        if(!label)label=String(x);
+
+        alerts+=
+          '<div class="F48_SAFE_ALERT">'+
+            '<div class="F48_SAFE_ALERT_ICON">!</div>'+
+            '<div>'+
+              '<strong>'+
+                f48Esc(label)+
+              '</strong>'+
+              '<small>TÂCHE URGENTE</small>'+
+            '</div>'+
+          '</div>';
+
+      });
+
+      risks.slice(0,3).forEach(function(x){
+
+        var label=
+          x&&(
+            x.n||
+            x.title||
+            x.name
+          );
+
+        if(!label)label=String(x);
+
+        alerts+=
+          '<div class="F48_SAFE_ALERT">'+
+            '<div class="F48_SAFE_ALERT_ICON">!</div>'+
+            '<div>'+
+              '<strong>'+
+                f48Esc(label)+
+              '</strong>'+
+              '<small>RISQUE À TRAITER</small>'+
+            '</div>'+
+          '</div>';
+
+      });
+
+      if(!alerts){
+
+        alerts=
+          '<div class="F48_SAFE_EMPTY">'+
+            '✓ Aucun blocage ou risque critique détecté.'+
+          '</div>';
+
+      }
+
+      v.innerHTML=
+
+        '<div class="F48_SAFE_DASH">'+
+
+          '<div class="F48_SAFE_HEAD">'+
+
+            '<div>'+
+              '<div class="F48_SAFE_KICK">'+
+                '48H FILM DESK'+
+              '</div>'+
+
+              '<div class="F48_SAFE_TITLE">'+
+                f48Esc(filmName)+
+              '</div>'+
+
+              '<div class="F48_SAFE_SUB">'+
+                'TABLEAU DE BORD DE PRODUCTION'+
+              '</div>'+
+            '</div>'+
+
+            '<div class="F48_SAFE_STATE '+state+'">'+
+              '<div class="F48_SAFE_DOT"></div>'+
+              '<span>'+stateText+'</span>'+
+            '</div>'+
+
+          '</div>'+
+
+          '<div class="F48_SAFE_HERO">'+
+
+            '<div class="F48_SAFE_CARD">'+
+              '<div class="F48_SAFE_LABEL">PROGRESSION DU FILM</div>'+
+
+              '<div class="F48_SAFE_PROGRESS_TOP">'+
+
+                '<div class="F48_SAFE_PERCENT">'+
+                  pct+'%'+
+                '</div>'+
+
+                '<div class="F48_SAFE_BAR">'+
+                  '<div style="width:'+pct+'%"></div>'+
+                '</div>'+
+
+              '</div>'+
+
+              '<div class="F48_SAFE_META">'+
+                doneShots+
+                ' plans validés sur '+
+                shots.length+
+              '</div>'+
+
+            '</div>'+
+
+            '<div class="F48_SAFE_CARD">'+
+              '<div class="F48_SAFE_LABEL">TEMPS RESTANT</div>'+
+
+              '<div class="F48_SAFE_TIME '+timeClass+'">'+
+                hours+'h '+
+                String(mins).padStart(2,"0")+
+              '</div>'+
+
+              '<div class="F48_SAFE_META">AVANT DEADLINE</div>'+
+            '</div>'+
+
+          '</div>'+
+
+          '<div class="F48_SAFE_NOW">'+
+
+            '<div class="F48_SAFE_NOW_ICON">'+
+              (late?"!":"→")+
+            '</div>'+
+
+            '<div class="F48_SAFE_NOW_BODY">'+
+
+              '<div class="F48_SAFE_LABEL">'+
+                'À FAIRE MAINTENANT'+
+              '</div>'+
+
+              '<div class="F48_SAFE_NOW_TITLE">'+
+                actionTitle+
+              '</div>'+
+
+              '<div class="F48_SAFE_NOW_DESC">'+
+                actionDesc+
+              '</div>'+
+
+            '</div>'+
+
+            '<button class="F48_SAFE_OPEN" '+
+              'onclick="go(\''+
+              actionModule.replace(/'/g,"\\'")+
+              '\')">'+
+              'OUVRIR'+
+            '</button>'+
+
+          '</div>'+
+
+          '<div class="F48_SAFE_STATS">'+
+
+            '<div class="F48_SAFE_STAT">'+
+              '<div class="F48_SAFE_STAT_LABEL">SCÈNES</div>'+
+              '<div class="F48_SAFE_STAT_VALUE">'+
+                scenes.length+
+              '</div>'+
+              '<div class="F48_SAFE_STAT_SUB">'+
+                sceneDone+' terminée(s)'+
+              '</div>'+
+            '</div>'+
+
+            '<div class="F48_SAFE_STAT">'+
+              '<div class="F48_SAFE_STAT_LABEL">PLANS</div>'+
+              '<div class="F48_SAFE_STAT_VALUE">'+
+                shots.length+
+              '</div>'+
+              '<div class="F48_SAFE_STAT_SUB">'+
+                todoShots+' à sécuriser'+
+              '</div>'+
+            '</div>'+
+
+            '<div class="F48_SAFE_STAT">'+
+              '<div class="F48_SAFE_STAT_LABEL">RISQUES</div>'+
+              '<div class="F48_SAFE_STAT_VALUE">'+
+                risks.length+
+              '</div>'+
+              '<div class="F48_SAFE_STAT_SUB">'+
+                (risks.length?"à traiter":"aucun")+
+              '</div>'+
+            '</div>'+
+
+            '<div class="F48_SAFE_STAT">'+
+              '<div class="F48_SAFE_STAT_LABEL">URGENCES</div>'+
+              '<div class="F48_SAFE_STAT_VALUE">'+
+                urgent.length+
+              '</div>'+
+              '<div class="F48_SAFE_STAT_SUB">'+
+                (urgent.length?"action requise":"aucune")+
+              '</div>'+
+            '</div>'+
+
+            '<div class="F48_SAFE_STAT">'+
+              '<div class="F48_SAFE_STAT_LABEL">VFX</div>'+
+              '<div class="F48_SAFE_STAT_VALUE">'+
+                vfxLeft+
+              '</div>'+
+              '<div class="F48_SAFE_STAT_SUB">restant(s)</div>'+
+            '</div>'+
+
+          '</div>'+
+
+          '<div class="F48_SAFE_COLUMNS">'+
+
+            '<div class="F48_SAFE_PANEL">'+
+
+              '<div class="F48_SAFE_LABEL">PRODUCTION</div>'+
+              '<div class="F48_SAFE_PANEL_TITLE">Vue d’ensemble</div>'+
+
+              '<div class="F48_SAFE_LINE">'+
+                '<span>Plans validés</span>'+
+                '<strong>'+doneShots+' / '+shots.length+'</strong>'+
+              '</div>'+
+
+              '<div class="F48_SAFE_LINE">'+
+                '<span>Charge restante</span>'+
+                '<strong>'+Math.round(estimate.need)+' min</strong>'+
+              '</div>'+
+
+              '<div class="F48_SAFE_LINE">'+
+                '<span>Temps disponible</span>'+
+                '<strong>'+Math.round(estimate.left)+' min</strong>'+
+              '</div>'+
+
+              '<div class="F48_SAFE_LINE">'+
+                '<span>Projection</span>'+
+                '<strong>'+
+                  (late
+                    ?'⚠ RETARD'
+                    :'✓ DANS LES TEMPS')+
+                '</strong>'+
+              '</div>'+
+
+            '</div>'+
+
+            '<div class="F48_SAFE_PANEL">'+
+
+              '<div class="F48_SAFE_LABEL">SURVEILLANCE</div>'+
+              '<div class="F48_SAFE_PANEL_TITLE">Points d’attention</div>'+
+
+              alerts+
+
+            '</div>'+
+
+          '</div>'+
+
+          '<div class="F48_SAFE_QUICK_LABEL">ACCÈS RAPIDES</div>'+
+
+          '<div class="F48_SAFE_QUICK">'+
+
+            '<button onclick="go(\'SCÉNARIO\')">'+
+              '<small>01</small>'+
+              '<strong>Scénario</strong>'+
+            '</button>'+
+
+            '<button onclick="go(\'DÉCOUPAGE\')">'+
+              '<small>02</small>'+
+              '<strong>Découpage</strong>'+
+            '</button>'+
+
+            '<button onclick="go(\'PLAN DE TOURNAGE\')">'+
+              '<small>03</small>'+
+              '<strong>Plan de tournage</strong>'+
+            '</button>'+
+
+            '<button onclick="go(\'TOURNAGE\')">'+
+              '<small>04</small>'+
+              '<strong>Tournage</strong>'+
+            '</button>'+
+
+            '<button onclick="go(\'MONTAGE\')">'+
+              '<small>05</small>'+
+              '<strong>Montage</strong>'+
+            '</button>'+
+
+          '</div>'+
+
+        '</div>';
+
+    }catch(e){
+
+      console.error(
+        "[F48 DASHBOARD SAFE]",
+        e
+      );
+
+    }
+
+  }
+
+  window.F48SafeDashboard=f48Dashboard;
+
+  var oldRenderSafe=
+    (typeof window.render==="function")
+    ?window.render
+    :null;
+
+  if(oldRenderSafe){
+
+    window.render=function(){
+
+      var result;
+
+      try{
+        result=oldRenderSafe.apply(this,arguments);
+      }catch(e){
+        console.error(
+          "[F48 DASHBOARD SAFE] render original",
+          e
+        );
+        throw e;
+      }
+
+      setTimeout(function(){
+
+        try{
+
+          if(
+            typeof mod!=="undefined" &&
+            mod==="DASHBOARD"
+          ){
+            f48Dashboard();
+          }
+
+        }catch(e){
+          console.error(
+            "[F48 DASHBOARD SAFE] post-render",
+            e
+          );
+        }
+
+      },0);
+
+      return result;
+    };
+
+  }
+
+  setInterval(function(){
+
+    try{
+
+      if(
+        typeof mod!=="undefined" &&
+        mod==="DASHBOARD"
+      ){
+
+        var v=document.getElementById("v");
+
+        if(v&&!v.querySelector(".F48_SAFE_DASH")){
+          f48Dashboard();
+        }
+
+      }
+
+    }catch(e){}
+
+  },1000);
+
+})();
+</script>
+<!-- /F48_DASHBOARD_SAFE_V1 -->
+<!-- F48_DASHBOARD_NAV_FIX_V1 -->
+<style id="F48_DASHBOARD_NAV_FIX_V1">
+
+/* Quand notre Dashboard est actif, les anciens blocs Dashboard
+   ne doivent jamais pouvoir reapparaitre visuellement. */
+
+body.F48_SAFE_DASH_ACTIVE #v > *:not(.F48_SAFE_DASH){
+  display:none !important;
+}
+
+body.F48_SAFE_DASH_ACTIVE #v > .F48_SAFE_DASH{
+  display:block !important;
+}
+
+</style>
+
+<script>
+(function(){
+
+  if(window.F48_DASHBOARD_NAV_FIX_V1)return;
+  window.F48_DASHBOARD_NAV_FIX_V1=true;
+
+  function F48ActivateSafeDashboard(){
+
+    try{
+
+      if(typeof mod==="undefined")return;
+
+      if(mod!=="DASHBOARD"){
+
+        document.body.classList.remove(
+          "F48_SAFE_DASH_ACTIVE"
+        );
+
+        return;
+
+      }
+
+      var v=document.getElementById("v");
+
+      if(!v)return;
+
+      var dash=
+        v.querySelector(".F48_SAFE_DASH");
+
+      if(!dash){
+
+        if(typeof window.F48SafeDashboard==="function"){
+
+          window.F48SafeDashboard();
+
+        }
+
+        dash=
+          v.querySelector(".F48_SAFE_DASH");
+
+      }
+
+      if(dash){
+
+        document.body.classList.add(
+          "F48_SAFE_DASH_ACTIVE"
+        );
+
+      }
+
+    }catch(e){
+
+      console.error(
+        "[F48 DASHBOARD NAV FIX]",
+        e
+      );
+
+    }
+
+  }
+
+
+  /*
+   * Surveillance très légère :
+   * dès que go/render change de module,
+   * notre Dashboard reprend immédiatement la main.
+   */
+
+  var oldGo=
+    (typeof window.go==="function")
+    ?window.go
+    :null;
+
+  if(oldGo){
+
+    window.go=function(){
+
+      var args=arguments;
+
+      document.body.classList.remove(
+        "F48_SAFE_DASH_ACTIVE"
+      );
+
+      var result;
+
+      try{
+
+        result=
+          oldGo.apply(this,args);
+
+      }catch(e){
+
+        console.error(
+          "[F48 DASHBOARD NAV FIX] go",
+          e
+        );
+
+        throw e;
+
+      }
+
+      setTimeout(
+        F48ActivateSafeDashboard,
+        0
+      );
+
+      setTimeout(
+        F48ActivateSafeDashboard,
+        30
+      );
+
+      setTimeout(
+        F48ActivateSafeDashboard,
+        100
+      );
+
+      return result;
+
+    };
+
+  }
+
+
+  var oldRender=
+    (typeof window.render==="function")
+    ?window.render
+    :null;
+
+  if(oldRender){
+
+    window.render=function(){
+
+      var result=
+        oldRender.apply(
+          this,
+          arguments
+        );
+
+      setTimeout(
+        F48ActivateSafeDashboard,
+        0
+      );
+
+      return result;
+
+    };
+
+  }
+
+
+  setTimeout(
+    F48ActivateSafeDashboard,
+    100
+  );
+
+})();
+</script>
+<!-- /F48_DASHBOARD_NAV_FIX_V1 -->
+<!-- F48_GOOGLE_NOTES_V1 -->
+<style>
+.F48_GOOGLE_NOTES_BAR{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:0 0 12px 0;
+}
+
+.F48_GOOGLE_NOTES_BAR button{
+  border:1px solid rgba(255,255,255,.12);
+  background:#151515;
+  color:#fff;
+  border-radius:8px;
+  padding:8px 12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.F48_GOOGLE_NOTES_BAR button:hover{
+  background:#222;
+}
+
+.F48_GOOGLE_STATUS{
+  margin-left:auto;
+  color:#888;
+  font-size:12px;
+}
+
+.F48_GOOGLE_STATUS.connected{
+  color:#7ee787;
+}
+</style>
+
+<script>
+(() => {
+  function F48GetCurrentNoteData(){
+    const app = document.querySelector('.F48_NOTES_APP');
+    if(!app) return null;
+
+    const title =
+      app.querySelector('.F48_NOTES_TITLE')?.value ||
+      app.querySelector('.F48_NOTES_TITLE')?.textContent ||
+      'Note 48H FILM DESK';
+
+    const editor =
+      app.querySelector('.F48_NOTES_CONTENT');
+
+    let content = '';
+
+    if(editor){
+      content = editor.innerText || editor.textContent || '';
+    }
+
+    return {
+      title: String(title).trim() || 'Note 48H FILM DESK',
+      content: String(content)
+    };
+  }
+
+  function F48EnsureGoogleBar(){
+    const app = document.querySelector('.F48_NOTES_APP');
+    if(!app) return;
+
+    if(app.querySelector('.F48_GOOGLE_NOTES_BAR')) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'F48_GOOGLE_NOTES_BAR';
+
+    bar.innerHTML = `
+      <button type="button" onclick="F48ExportCurrentNoteTXT()">
+        📄 Exporter TXT
+      </button>
+
+      <button type="button" onclick="F48GoogleLoginUI()">
+        🔵 Se connecter à Google
+      </button>
+
+      <button type="button" onclick="F48CreateGoogleDocUI()">
+        📝 Créer dans Google Docs
+      </button>
+
+      <span class="F48_GOOGLE_STATUS" id="F48_GOOGLE_STATUS">
+        Google non connecté
+      </span>
+    `;
+
+    const toolbar =
+      app.querySelector('.F48_NOTES_TOOLBAR');
+
+    if(toolbar){
+      toolbar.parentNode.insertBefore(bar, toolbar);
+    }else{
+      app.insertBefore(bar, app.firstChild);
+    }
+
+    F48UpdateGoogleStatus();
+  }
+
+  window.F48ExportCurrentNoteTXT = async function(){
+    try{
+      const data = F48GetCurrentNoteData();
+
+      if(!data){
+        alert('Aucune note ouverte.');
+        return;
+      }
+
+      if(!window.F48Google || !window.F48Google.exportTxt){
+        alert('Le module d’export TXT n’est pas disponible.');
+        return;
+      }
+
+      const result =
+        await window.F48Google.exportTxt(data);
+
+      if(result?.success){
+        const status =
+          document.getElementById('F48_GOOGLE_STATUS');
+
+        if(status){
+          status.textContent = 'TXT exporté ✓';
+        }
+      }else if(!result?.canceled){
+        alert(
+          result?.error ||
+          'Impossible d’exporter la note.'
+        );
+      }
+    }catch(e){
+      console.error(e);
+      alert('Erreur pendant l’export TXT.');
+    }
+  };
+
+  window.F48GoogleLoginUI = async function(){
+    try{
+      if(!window.F48Google){
+        alert('Le module Google n’est pas disponible.');
+        return;
+      }
+
+      const status =
+        document.getElementById('F48_GOOGLE_STATUS');
+
+      if(status){
+        status.textContent = 'Connexion Google...';
+        status.classList.remove('connected');
+      }
+
+      const result =
+        await window.F48Google.login();
+
+      if(result?.success){
+        if(status){
+          status.textContent = 'Google connecté ✓';
+          status.classList.add('connected');
+        }
+
+        alert('Compte Google connecté avec succès.');
+      }else{
+        if(status){
+          status.textContent = 'Google non connecté';
+        }
+
+        alert(
+          result?.error ||
+          'Impossible de se connecter à Google.'
+        );
+      }
+    }catch(e){
+      console.error(e);
+
+      const status =
+        document.getElementById('F48_GOOGLE_STATUS');
+
+      if(status){
+        status.textContent = 'Google non connecté';
+      }
+
+      alert(
+        e?.message ||
+        'Erreur pendant la connexion Google.'
+      );
+    }
+  };
+
+  window.F48CreateGoogleDocUI = async function(){
+    try{
+      const data = F48GetCurrentNoteData();
+
+      if(!data){
+        alert('Aucune note ouverte.');
+        return;
+      }
+
+      if(!window.F48Google){
+        alert('Le module Google n’est pas disponible.');
+        return;
+      }
+
+      const status =
+        document.getElementById('F48_GOOGLE_STATUS');
+
+      if(status){
+        status.textContent = 'Création du Google Doc...';
+        status.classList.remove('connected');
+      }
+
+      const result =
+        await window.F48Google.createDoc(data);
+
+      if(result?.success){
+        if(status){
+          status.textContent = 'Google Doc créé ✓';
+          status.classList.add('connected');
+        }
+
+        const open =
+          confirm(
+            'Google Doc créé avec succès.\n\nVeux-tu l’ouvrir maintenant ?'
+          );
+
+        if(open){
+          window.open(result.url, '_blank');
+        }
+      }else{
+        if(status){
+          status.textContent = 'Google non connecté';
+        }
+
+        if(
+          result?.error &&
+          /connexion google|connecté|token/i.test(result.error)
+        ){
+          const login =
+            confirm(
+              'Ton compte Google n’est pas connecté.\n\nVeux-tu te connecter maintenant ?'
+            );
+
+          if(login){
+            await F48GoogleLoginUI();
+          }
+
+          return;
+        }
+
+        alert(
+          result?.error ||
+          'Impossible de créer le Google Doc.'
+        );
+      }
+    }catch(e){
+      console.error(e);
+
+      const status =
+        document.getElementById('F48_GOOGLE_STATUS');
+
+      if(status){
+        status.textContent = 'Erreur Google';
+      }
+
+      alert(
+        e?.message ||
+        'Erreur pendant la création du Google Doc.'
+      );
+    }
+  };
+
+  async function F48UpdateGoogleStatus(){
+    try{
+      if(!window.F48Google?.status) return;
+
+      const result =
+        await window.F48Google.status();
+
+      const status =
+        document.getElementById('F48_GOOGLE_STATUS');
+
+      if(!status) return;
+
+      if(result?.connected){
+        status.textContent = 'Google connecté ✓';
+        status.classList.add('connected');
+      }else{
+        status.textContent = 'Google non connecté';
+        status.classList.remove('connected');
+      }
+    }catch(e){}
+  }
+
+  function F48InstallGoogleNotes(){
+    F48EnsureGoogleBar();
+  }
+
+  const oldRenderGoogle =
+    window.render;
+
+  if(typeof oldRenderGoogle === 'function'){
+    window.render = function(){
+      const result =
+        oldRenderGoogle.apply(this, arguments);
+
+      setTimeout(F48InstallGoogleNotes, 0);
+      setTimeout(F48InstallGoogleNotes, 50);
+      setTimeout(F48InstallGoogleNotes, 150);
+
+      return result;
+    };
+  }
+
+  setTimeout(F48InstallGoogleNotes, 300);
+  setTimeout(F48InstallGoogleNotes, 1000);
+})();
+</script>
+
+<!-- ============================================================
+     F48_GLOBAL_EXPORT_V1
+     Export universel PDF / Google Docs / Google Drive
+     ============================================================ -->
+
+<style id="F48_GLOBAL_EXPORT_STYLE">
+
+.F48_GLOBAL_EXPORT{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+
+  margin:0 0 18px 0;
+  padding:10px 12px;
+
+  background:#0d0e10;
+  border:1px solid #292b2f;
+  border-radius:7px;
+
+  box-shadow:0 3px 12px rgba(0,0,0,.18);
+}
+
+.F48_GLOBAL_EXPORT_TITLE{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  color:#b8bac0;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.F48_GLOBAL_EXPORT_BUTTONS{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.F48_GLOBAL_EXPORT button{
+  font-size:11px;
+  padding:6px 9px;
+}
+
+.F48_GLOBAL_EXPORT button:hover{
+  border-color:#55585e;
+}
+
+.F48_GLOBAL_EXPORT .F48_EXPORT_DRIVE{
+  border-color:#3d5d87;
+}
+
+.F48_GLOBAL_EXPORT .F48_EXPORT_DOCS{
+  border-color:#4f4f4f;
+}
+
+.F48_EXPORT_STATUS{
+  width:100%;
+  color:#70737a;
+  font-size:10px;
+  display:none;
+}
+
+.F48_EXPORT_STATUS.show{
+  display:block;
+}
+
+.F48_EXPORT_STATUS.ok{
+  color:#3fae6a;
+}
+
+.F48_EXPORT_STATUS.error{
+  color:#e5252a;
+}
+
+@media(max-width:700px){
+  .F48_GLOBAL_EXPORT{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .F48_GLOBAL_EXPORT_BUTTONS{
+    width:100%;
+  }
+
+  .F48_GLOBAL_EXPORT button{
+    flex:1;
+  }
+}
+
+@media print{
+  .F48_GLOBAL_EXPORT{
+    display:none!important;
+  }
+}
+
+</style>
+
+<script>
+(function(){
+
+  if(window.F48_GLOBAL_EXPORT_V1) return;
+  window.F48_GLOBAL_EXPORT_V1 = true;
+
+  function getPageTitle(){
+
+    try{
+
+      let title = "";
+
+      if(typeof mod !== "undefined" && mod){
+        title = String(mod);
+      }
+
+      const h =
+        document.querySelector("#v h1") ||
+        document.querySelector("#v h2") ||
+        document.querySelector("#v .tabs a.on");
+
+      if(h && h.innerText.trim()){
+        title = h.innerText.trim();
+      }
+
+      if(!title){
+        title = "Export";
+      }
+
+      return title
+        .replace(/[<>:"/\\\\|?*]/g,"")
+        .replace(/\s+/g," ")
+        .trim();
+
+    }catch(e){
+
+      return "Export";
+
+    }
+
+  }
+
+
+  function getProjectName(){
+
+    try{
+
+      const candidates = [
+        window.S?.name,
+        window.S?.title,
+        window.S?.projectName,
+        document.querySelector("#pn")?.innerText
+      ];
+
+      for(const value of candidates){
+
+        if(value && String(value).trim()){
+          return String(value)
+            .replace(/\s+/g," ")
+            .trim();
+        }
+
+      }
+
+    }catch(e){}
+
+    return "Projet";
+
+  }
+
+
+  function getExportName(){
+
+    const page = getPageTitle();
+    const project = getProjectName();
+
+    return `48H FILM DESK — ${page} — ${project}`;
+
+  }
+
+
+  function getPageText(){
+
+    const section =
+      document.querySelector("#v") ||
+      document.querySelector("section");
+
+    if(!section){
+      return document.body.innerText || "";
+    }
+
+    const clone = section.cloneNode(true);
+
+    clone
+      .querySelectorAll(
+        ".F48_GLOBAL_EXPORT,button,.np,.no-print"
+      )
+      .forEach(el => el.remove());
+
+    return clone.innerText
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
+
+  }
+
+
+  function getPageHTML(){
+
+    const section =
+      document.querySelector("#v") ||
+      document.querySelector("section");
+
+    if(!section){
+      return "<p>48H FILM DESK</p>";
+    }
+
+    const clone = section.cloneNode(true);
+
+    clone
+      .querySelectorAll(
+        ".F48_GLOBAL_EXPORT,button,.np,.no-print"
+      )
+      .forEach(el => el.remove());
+
+    return clone.innerHTML;
+
+  }
+
+
+  function status(message,type){
+
+    const box = document.querySelector(".F48_EXPORT_STATUS");
+
+    if(!box) return;
+
+    box.textContent = message;
+    box.className = "F48_EXPORT_STATUS show " + (type || "");
+
+  }
+
+
+  window.F48ExportPagePDF = async function(){
+
+    try{
+
+      status("Génération du PDF…");
+
+      if(!window.F48Google?.exportPdf){
+
+        status("Export PDF indisponible. Redémarre l'application.", "error");
+        return;
+
+      }
+
+      const result = await window.F48Google.exportPdf({
+        fileName:getExportName()
+      });
+
+      if(result?.success){
+
+        status("PDF enregistré.", "ok");
+
+      }else if(!result?.canceled){
+
+        status(
+          "Erreur PDF : " + (result?.error || "inconnue"),
+          "error"
+        );
+
+      }else{
+
+        status("");
+
+      }
+
+    }catch(e){
+
+      console.error("[F48 EXPORT PDF]",e);
+
+      status(
+        "Erreur PDF : " + (e?.message || e),
+        "error"
+      );
+
+    }
+
+  };
+
+
+  window.F48ExportPageGoogleDocs = async function(){
+
+    try{
+
+      status("Création du Google Docs…");
+
+      if(!window.F48Google?.createDoc){
+
+        status("Google Docs indisponible.", "error");
+        return;
+
+      }
+
+      const title = getExportName();
+
+      const content = getPageText();
+
+      const result = await window.F48Google.createDoc({
+        title,
+        content
+      });
+
+      if(result?.success){
+
+        status("Google Docs créé. Ouverture…","ok");
+
+        if(result.url){
+
+          window.open(result.url,"_blank");
+
+        }
+
+      }else{
+
+        status(
+          result?.error ||
+          "Impossible de créer le Google Docs.",
+          "error"
+        );
+
+      }
+
+    }catch(e){
+
+      console.error("[F48 EXPORT DOCS]",e);
+
+      status(
+        "Erreur Google Docs : " + (e?.message || e),
+        "error"
+      );
+
+    }
+
+  };
+
+
+  window.F48ExportPagePDFToDrive = async function(){
+
+    try{
+
+      status("Création du PDF puis envoi sur Google Drive…");
+
+      if(!window.F48Google?.exportPdfToDrive){
+
+        status(
+          "Export Google Drive indisponible. Redémarre l'application.",
+          "error"
+        );
+
+        return;
+
+      }
+
+      const result = await window.F48Google.exportPdfToDrive({
+        fileName:getExportName()
+      });
+
+      if(result?.success){
+
+        status("PDF envoyé sur Google Drive. Ouverture…","ok");
+
+        if(result.url){
+
+          window.open(result.url,"_blank");
+
+        }
+
+      }else{
+
+        status(
+          result?.error ||
+          "Impossible d'envoyer le PDF sur Google Drive.",
+          "error"
+        );
+
+      }
+
+    }catch(e){
+
+      console.error("[F48 EXPORT DRIVE]",e);
+
+      status(
+        "Erreur Google Drive : " + (e?.message || e),
+        "error"
+      );
+
+    }
+
+  };
+
+
+  function installExportBar(){
+
+    let bar = document.querySelector(".F48_GLOBAL_EXPORT");
+
+    if(!bar){
+
+      bar = document.createElement("div");
+
+      bar.className = "F48_GLOBAL_EXPORT";
+
+      bar.innerHTML = `
+        <div class="F48_GLOBAL_EXPORT_TITLE">
+          ☁️ EXPORTER
+        </div>
+
+        <div class="F48_GLOBAL_EXPORT_BUTTONS">
+
+          <button
+            type="button"
+            onclick="F48ExportPagePDF()">
+            📄 PDF
+          </button>
+
+          <button
+            type="button"
+            class="F48_EXPORT_DOCS"
+            onclick="F48ExportPageGoogleDocs()">
+            📝 Google Docs
+          </button>
+
+          <button
+            type="button"
+            class="F48_EXPORT_DRIVE"
+            onclick="F48ExportPagePDFToDrive()">
+            ☁️ PDF → Google Drive
+          </button>
+
+        </div>
+
+        <div class="F48_EXPORT_STATUS"></div>
+      `;
+
+      document.body.appendChild(bar);
+
+    }
+
+  }
+
+
+  function boot(){
+
+    installExportBar();
+
+  }
+
+
+  if(document.readyState === "loading"){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      boot,
+      {once:true}
+    );
+
+  }else{
+
+    boot();
+
+  }
+
+})();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+<!-- F48_DASHBOARD_REVAMP_RUNTIME_V1 -->
+<script>
+(function(){
+  function F48InstallDashboard(){
+    try{
+      if(String(window.mod||"").toUpperCase()!=="DASHBOARD") return;
+
+      let old=document.getElementById("F48_DASHBOARD_REVAMP_HOST");
+
+      if(!old){
+        const main=document.querySelector("main") || document.querySelector("#app") || document.body;
+
+        old=document.createElement("div");
+        old.id="F48_DASHBOARD_REVAMP_HOST";
+
+        main.appendChild(old);
+      }
+
+      if(typeof window.F48DashboardRender==="function"){
+        window.F48DashboardRender();
+      }
+    }catch(e){
+      console.warn("F48 Dashboard:",e);
+    }
+  }
+
+  const oldRender=window.render;
+
+  if(typeof oldRender==="function"){
+    window.render=function(){
+      oldRender.apply(this,arguments);
+
+      setTimeout(function(){
+        if(String(window.mod||"").toUpperCase()==="DASHBOARD"){
+          const children=[...document.body.children];
+
+          children.forEach(function(el){
+            if(
+              el.id!=="F48_DASHBOARD_REVAMP_HOST" &&
+              el.id!=="F48_ONBOARDING_V4" &&
+              el.tagName!=="SCRIPT" &&
+              el.tagName!=="STYLE"
+            ){
+              if(
+                el.matches &&
+                (
+                  el.matches("#assistant") ||
+                  el.matches(".assistant") ||
+                  el.matches("[class*='assistant']") ||
+                  el.matches("[id*='assistant']")
+                )
+              ) return;
+            }
+          });
+
+          F48InstallDashboard();
+        }
+      },30);
+    };
+  }
+
+  document.addEventListener("click",function(){
+    setTimeout(F48InstallDashboard,50);
+  },true);
+
+  setTimeout(F48InstallDashboard,150);
+})();
+</script>
+
+
+
+
+
+
+
+

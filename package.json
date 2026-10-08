@@ -1,49 +1,50 @@
-{
-  "name": "48h-film-desk",
-  "version": "1.2.1",
-  "description": "48H FILM DESK - application de bureau",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "server": "node server/server.js",
-    "build": "electron-builder"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.117.2",
-    "electron-updater": "^6.8.9",
-    "ws": "^8.18.0"
-  },
-  "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^26.15.3",
-    "png-to-ico": "^2.1.8",
-    "sharp": "^0.35.5"
-  },
-  "build": {
-    "appId": "com.flow.48hfilmdesk",
-    "productName": "48H FILM DESK",
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "jz7drztvjt-beep",
-      "repo": "48h-film-desk"
-    },
-    "files": [
-      "main.js",
-      "splash.html",
-      "48H_FILM_DESK.html",
-      "server-config.js",
-      "sync-shim.js",
-      "assets/**/*"
-    ],
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
-  }
+﻿{
+    "name":  "48h-film-desk",
+    "version":  "1.2.1",
+    "description":  "48H FILM DESK - application de bureau",
+    "main":  "main.js",
+    "scripts":  {
+                    "start":  "electron .",
+                    "server":  "node server/server.js",
+                    "build":  "electron-builder"
+                },
+    "dependencies":  {
+                         "@supabase/supabase-js":  "^2.117.2",
+                         "electron-updater":  "^6.8.9",
+                         "ws":  "^8.18.0"
+                     },
+    "devDependencies":  {
+                            "electron":  "^31.0.0",
+                            "electron-builder":  "^26.15.3",
+                            "png-to-ico":  "^2.1.8",
+                            "sharp":  "^0.35.5"
+                        },
+    "build":  {
+                  "appId":  "com.flow.48hfilmdesk",
+                  "productName":  "48H FILM DESK",
+                  "win":  {
+                              "target":  "nsis",
+                              "icon":  "assets/icon.ico"
+                          },
+                  "publish":  {
+                                  "provider":  "github",
+                                  "owner":  "jz7drztvjt-beep",
+                                  "repo":  "48h-film-desk"
+                              },
+                  "files":  [
+                                "main.js",
+                                "splash.html",
+                                "48H_FILM_DESK.html",
+                                "server-config.js",
+                                "sync-shim.js",
+                                "assets/**/*",
+                                "preload-google.js"
+                            ],
+                  "mac":  {
+                              "target":  "dmg"
+                          },
+                  "linux":  {
+                                "target":  "AppImage"
+                            }
+              }
 }
